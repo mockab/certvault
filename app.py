@@ -395,6 +395,18 @@ def delete_file(cid,fid):
     Path(row['file_path']).unlink(missing_ok=True); db.execute("DELETE FROM cert_files WHERE id=?",(fid,)); db.commit()
     return jsonify({'ok':True})
 
+@app.route('/api/certs/<int:cid>/files/<int:fid>', methods=['PATCH'])
+@login_required
+def set_file_active(cid,fid):
+    db=get_db(); d=request.get_json(); is_active=1 if d.get('is_active') else 0
+    row=db.execute("SELECT * FROM cert_files WHERE id=? AND cert_id=?",(fid,cid)).fetchone()
+    if not row: return jsonify({'error':'Not found'}),404
+    # When activating, deactivate other files of the same type so only one is active
+    if is_active:
+        db.execute("UPDATE cert_files SET is_active=0 WHERE cert_id=? AND file_type=? AND id!=?",(cid,row['file_type'],fid))
+    db.execute("UPDATE cert_files SET is_active=? WHERE id=?",(is_active,fid)); db.commit()
+    return jsonify({'ok':True})
+
 @app.route('/api/certs/<int:cid>/files/<int:fid>/download')
 @login_required
 def download_file(cid,fid):
