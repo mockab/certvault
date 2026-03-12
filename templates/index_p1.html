@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CertVault</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0a0d12;--bg2:#0f1318;--bg3:#141920;--bg4:#1a2030;--border:#1e2a38;--border2:#253040;--text:#c8d8e8;--text2:#7a9ab8;--text3:#4a6880;--accent:#00c8ff;--accent2:#0090c8;--green:#00e878;--yellow:#ffd040;--orange:#ff8c30;--red:#ff4060;--purple:#b060ff;--r:6px;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;}
+.app{display:flex;height:100vh;overflow:hidden;}
+.sidebar{width:236px;min-width:236px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.sb-head{padding:18px 14px 14px;border-bottom:1px solid var(--border);}
+.sb-logo{display:flex;align-items:center;gap:9px;}
+.sb-icon{width:30px;height:30px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.sb-name{font-family:var(--mono);font-weight:600;font-size:15px;}
+.sb-ver{font-size:10px;color:var(--text3);font-family:var(--mono);}
+.sb-user{padding:8px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3);}
+.sb-user-dot{width:7px;height:7px;border-radius:50%;background:var(--green);}
+.sb-nav{padding:10px 6px;flex:1;overflow-y:auto;}
+.nav-sec{margin-bottom:16px;}
+.nav-sec-lbl{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;padding:0 8px;margin-bottom:5px;}
+.nav-btn{display:flex;align-items:center;gap:9px;width:100%;padding:7px 10px;border-radius:var(--r);border:none;background:none;color:var(--text2);cursor:pointer;font-size:13px;font-family:var(--sans);transition:all .15s;text-align:left;}
+.nav-btn:hover{background:var(--bg3);color:var(--text);}
+.nav-btn.active{background:rgba(0,200,255,.1);color:var(--accent);}
+.nav-btn .ic{font-size:14px;width:17px;text-align:center;}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-family:var(--mono);}
+.sb-foot{padding:10px 6px;border-top:1px solid var(--border);}
+.stats-bar{display:flex;gap:1px;padding:10px 18px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;}
+.stat{flex:1;text-align:center;padding:7px;background:var(--bg3);border-radius:var(--r);cursor:pointer;transition:background .15s;}
+.stat:hover{background:var(--bg4);}
+.stat:first-child{border-radius:6px 0 0 6px;}.stat:last-child{border-radius:0 6px 6px 0;}
+.stat-val{font-family:var(--mono);font-size:20px;font-weight:600;}
+.stat-lbl{font-size:10px;color:var(--text3);margin-top:1px;text-transform:uppercase;letter-spacing:.8px;}
+.s-ok .stat-val{color:var(--green);}.s-warn .stat-val{color:var(--yellow);}.s-crit .stat-val{color:var(--orange);}.s-exp .stat-val{color:var(--red);}.s-tot .stat-val{color:var(--accent);}
+.toolbar{display:flex;align-items:center;gap:8px;padding:10px 18px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.search-box{flex:1;max-width:340px;position:relative;}
+.search-box input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px 7px 32px;border-radius:var(--r);font-size:13px;font-family:var(--sans);outline:none;transition:border-color .15s;}
+.search-box input:focus{border-color:var(--accent2);}
+.si{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;}
+.sort-sel{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:7px 9px;border-radius:var(--r);font-size:12px;font-family:var(--mono);outline:none;cursor:pointer;}
+.tb-right{margin-left:auto;display:flex;gap:7px;}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:var(--r);border:none;cursor:pointer;font-size:13px;font-family:var(--sans);font-weight:500;transition:all .15s;text-decoration:none;white-space:nowrap;}
+.btn-p{background:var(--accent);color:#000;}.btn-p:hover{background:#33d4ff;}
+.btn-s{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);}.btn-s:hover{background:var(--bg4);color:var(--text);}
+.btn-d{background:rgba(255,64,96,.1);border:1px solid rgba(255,64,96,.3);color:var(--red);}.btn-d:hover{background:rgba(255,64,96,.2);}
+.btn-sm{padding:5px 9px;font-size:12px;}
+.btn-g{background:none;border:none;color:var(--text3);padding:5px;border-radius:var(--r);cursor:pointer;}.btn-g:hover{background:var(--bg4);color:var(--text);}
+.content{flex:1;overflow-y:auto;padding:14px 18px;}
+.cert-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:11px;}
+.cert-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;overflow:hidden;}
+.cert-card:hover{border-color:var(--border2);background:var(--bg3);transform:translateY(-1px);box-shadow:0 4px 18px rgba(0,0,0,.3);}
+.cc-accent{height:3px;}
+.cc-body{padding:13px;}
+.cc-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
+.cc-name{font-weight:600;font-size:14px;line-height:1.3;}
+.cc-dom{font-family:var(--mono);font-size:11px;color:var(--text3);margin-top:2px;}
+.cbadge{font-size:10px;font-weight:600;padding:3px 7px;border-radius:10px;white-space:nowrap;flex-shrink:0;font-family:var(--mono);}
+.b-ok{background:rgba(0,232,120,.15);color:var(--green);border:1px solid rgba(0,232,120,.3);}
+.b-warn{background:rgba(255,208,64,.15);color:var(--yellow);border:1px solid rgba(255,208,64,.3);}
+.b-crit{background:rgba(255,140,48,.15);color:var(--orange);border:1px solid rgba(255,140,48,.3);}
+.b-exp{background:rgba(255,64,96,.15);color:var(--red);border:1px solid rgba(255,64,96,.3);}
+.b-unk{background:rgba(122,154,184,.15);color:var(--text2);border:1px solid rgba(122,154,184,.3);}
+.cc-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;}
+.tag{font-size:10px;padding:2px 6px;border-radius:10px;background:var(--bg4);color:var(--text3);border:1px solid var(--border);font-family:var(--mono);}
+.cc-foot{padding:7px 13px;background:var(--bg);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.cc-meta{font-size:11px;color:var(--text3);font-family:var(--mono);display:flex;gap:10px;}
+.panel-ov{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;opacity:0;pointer-events:none;transition:opacity .2s;}
+.panel-ov.open{opacity:1;pointer-events:all;}
+.panel{position:fixed;right:0;top:0;bottom:0;width:660px;background:var(--bg2);border-left:1px solid var(--border);z-index:101;transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden;}
+.panel.open{transform:translateX(0);}
+.panel-hd{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.panel-title{font-weight:600;font-size:15px;display:flex;align-items:center;gap:9px;}
+.panel-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg);}
+.pt{padding:11px 16px;font-size:12px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;}
+.pt:hover{color:var(--text);}
+.pt.active{color:var(--accent);border-bottom-color:var(--accent);}
+.panel-body{flex:1;overflow-y:auto;}
+.tc{display:none;padding:18px;}
+.tc.active{display:block;}
+.panel-ft{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:7px;flex-shrink:0;}
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-ov.open{opacity:1;pointer-events:all;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:10px;width:460px;max-width:95vw;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;}
+.modal-hd{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-weight:600;font-size:14px;}
+.modal-body{padding:18px;overflow-y:auto;flex:1;}
+.modal-ft{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:7px;justify-content:flex-end;}
+.fr{margin-bottom:14px;}
+.fr2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.lbl{display:block;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}
+.inp{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 11px;border-radius:var(--r);font-size:13px;font-family:var(--sans);outline:none;transition:border-color .15s;}
+.inp:focus{border-color:var(--accent2);}
+textarea.inp{resize:vertical;min-height:72px;}
+.inp::placeholder{color:var(--text3);}
+select.inp option{background:var(--bg3);}
+.upload-zone{border:2px dashed var(--border2);border-radius:8px;padding:26px;text-align:center;cursor:pointer;transition:all .15s;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(0,200,255,.04);}
+.flist{display:flex;flex-direction:column;gap:5px;margin-top:10px;}
+.fitem{display:flex;align-items:center;gap:9px;padding:8px 11px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);}
+.fic{font-size:15px;width:18px;text-align:center;flex-shrink:0;}
+.finfo{flex:1;min-width:0;}
+.fname{font-family:var(--mono);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fmeta{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:1px;}
+.ftbadge{font-size:10px;padding:2px 5px;border-radius:4px;font-family:var(--mono);font-weight:600;flex-shrink:0;}
+.ft-certificate{background:rgba(0,200,255,.15);color:var(--accent);}
+.ft-key{background:rgba(176,96,255,.15);color:var(--purple);}
+.ft-chain{background:rgba(0,232,120,.15);color:var(--green);}
+.ft-csr{background:rgba(255,208,64,.15);color:var(--yellow);}
+.ft-other{background:rgba(122,154,184,.15);color:var(--text2);}
+.info-grid{display:grid;grid-template-columns:130px 1fr;border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.ik{padding:7px 11px;background:var(--bg3);font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);font-family:var(--mono);}
+.iv{padding:7px 11px;background:var(--bg2);font-size:12px;color:var(--text);border-bottom:1px solid var(--border);font-family:var(--mono);word-break:break-all;}
+.ik:last-of-type,.iv:last-of-type{border-bottom:none;}
+.exp-bar-wrap{margin:14px 0;}
+.exp-bar{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-top:5px;}
+.exp-bar-fill{height:100%;border-radius:3px;transition:width .5s;}
+.loc-card{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:13px;margin-bottom:9px;}
+.export-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.export-opt{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:13px;cursor:pointer;transition:all .15s;text-align:left;}
+.export-opt:hover{border-color:var(--accent2);background:var(--bg4);}
+.export-opt.sel{border-color:var(--accent);background:rgba(0,200,255,.08);}
+.tags-wrap{display:flex;flex-wrap:wrap;gap:5px;padding:7px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);cursor:text;}
+.tags-wrap:focus-within{border-color:var(--accent2);}
+.tag-item{display:flex;align-items:center;gap:3px;background:var(--bg4);border:1px solid var(--border2);padding:2px 7px;border-radius:10px;font-size:11px;font-family:var(--mono);color:var(--text2);}
+.tag-rm{cursor:pointer;color:var(--text3);font-size:11px;}.tag-rm:hover{color:var(--red);}
+.tags-inp{border:none;background:none;outline:none;color:var(--text);font-size:12px;font-family:var(--mono);min-width:70px;}
+.cp{display:flex;gap:7px;flex-wrap:wrap;}
+.cs{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;}
+.cs.sel{border-color:#fff;transform:scale(1.25);}
+.days-sel{display:flex;gap:7px;flex-wrap:wrap;}
+.day-chip{padding:5px 11px;border-radius:20px;border:1px solid var(--border2);background:var(--bg3);color:var(--text3);cursor:pointer;font-family:var(--mono);font-size:12px;transition:all .15s;}
+.day-chip.sel{background:rgba(0,200,255,.15);border-color:var(--accent);color:var(--accent);}
+.toast-c{position:fixed;bottom:18px;right:18px;display:flex;flex-direction:column;gap:7px;z-index:300;}
+.toast{padding:11px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:13px;max-width:300px;display:flex;align-items:center;gap:9px;animation:slideIn .2s ease;box-shadow:0 4px 18px rgba(0,0,0,.4);}
+.toast-ok{border-left:3px solid var(--green);}.toast-err{border-left:3px solid var(--red);}.toast-info{border-left:3px solid var(--accent);}
+@keyframes slideIn{from{transform:translateX(50px);opacity:0}to{transform:translateX(0);opacity:1}}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:70px 20px;text-align:center;}
+.empty-ic{font-size:48px;margin-bottom:14px;opacity:.35;}
+.empty-t{font-size:15px;font-weight:600;color:var(--text2);margin-bottom:7px;}
+.empty-d{font-size:13px;color:var(--text3);max-width:280px;line-height:1.6;}
+.loading{display:flex;align-items:center;justify-content:center;padding:60px;}
+.spin{width:22px;height:22px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.sec-t{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;}
+.san-list{display:flex;flex-wrap:wrap;gap:4px;}
+.san-tag{font-size:11px;padding:2px 6px;background:var(--bg4);border:1px solid var(--border);border-radius:4px;font-family:var(--mono);color:var(--text2);}
+.pw-wrap{position:relative;}.pw-wrap .inp{padding-right:34px;}
+.pw-eye{position:absolute;right:9px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;}
+.filter-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:12px;background:rgba(0,200,255,.1);border:1px solid rgba(0,200,255,.3);color:var(--accent);font-size:11px;font-family:var(--mono);cursor:pointer;}
+.settings-sec{margin-bottom:26px;}
+.settings-sec h3{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:12px;padding-bottom:7px;border-bottom:1px solid var(--border);}
+.qr-box{text-align:center;margin:14px 0;}
+.qr-box img{border-radius:8px;border:3px solid var(--bg4);}
+.secret-box{background:var(--bg4);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-family:var(--mono);font-size:13px;letter-spacing:2px;text-align:center;color:var(--accent);word-break:break-all;margin:10px 0;}
+.status-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-size:13px;margin-bottom:8px;}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.s-green{background:var(--green);}.s-red{background:var(--red);}.s-yellow{background:var(--yellow);}
+::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+<div class="app">
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sb-head"><div class="sb-logo"><div class="sb-icon">🔐</div><div><div class="sb-name">CertVault</div><div class="sb-ver">v1.0</div></div></div></div>
+  <div class="sb-user"><div class="sb-user-dot"></div><span id="sb-username">…</span><span style="margin-left:auto;font-size:10px;cursor:pointer;color:var(--accent)" onclick="logout()">Sign out</span></div>
+  <nav class="sb-nav">
+    <div class="nav-sec">
+      <div class="nav-sec-lbl">Main</div>
+      <button class="nav-btn active" id="nav-dashboard" onclick="nav('dashboard')"><span class="ic">⬡</span>Dashboard<span class="nav-badge" id="expiry-badge" style="display:none"></span></button>
+    </div>
+    <div class="nav-sec">
+      <div class="nav-sec-lbl">Filter by Tag</div>
+      <div id="tag-nav"></div>
+    </div>
+    <div class="nav-sec">
+      <div class="nav-sec-lbl">Tools</div>
+      <button class="nav-btn" id="nav-certbot" onclick="nav('certbot')"><span class="ic">🤖</span>Certbot / Let's Encrypt</button>
+      <button class="nav-btn" id="nav-notifications" onclick="nav('notifications')"><span class="ic">🔔</span>Notifications</button>
+      <button class="nav-btn" id="nav-account" onclick="nav('account')"><span class="ic">👤</span>Account</button>
+      <button class="nav-btn" id="nav-settings" onclick="nav('settings')"><span class="ic">⚙</span>Settings</button>
+    </div>
+  </nav>
+  <div class="sb-foot"><button class="btn btn-p" style="width:100%;justify-content:center" onclick="openNewCert()">+ Add Certificate</button></div>
+</aside>
+
+<!-- Main content area -->
+<div class="main">
+
+<!-- Dashboard view -->
+<div id="view-dashboard" class="view" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+  <div class="stats-bar">
+    <div class="stat s-tot" onclick="clearFilters()"><div class="stat-val" id="st-tot">–</div><div class="stat-lbl">Total</div></div>
+    <div class="stat s-ok" onclick="filterStatus('ok')"><div class="stat-val" id="st-ok">–</div><div class="stat-lbl">Healthy</div></div>
+    <div class="stat s-warn" onclick="filterStatus('warning')"><div class="stat-val" id="st-warn">–</div><div class="stat-lbl">Expiring</div></div>
+    <div class="stat s-crit" onclick="filterStatus('critical')"><div class="stat-val" id="st-crit">–</div><div class="stat-lbl">Critical</div></div>
+    <div class="stat s-exp" onclick="filterStatus('expired')"><div class="stat-val" id="st-exp">–</div><div class="stat-lbl">Expired</div></div>
+  </div>
+  <div class="toolbar">
+    <div class="search-box"><span class="si">⌕</span><input type="text" id="search-in" placeholder="Search certificates…" oninput="onSearch(this.value)"/></div>
+    <select class="sort-sel" onchange="onSort(this.value)">
+      <option value="name">Name A–Z</option><option value="expiry">Expiry Date</option>
+      <option value="created">Recently Added</option><option value="domain">Domain</option>
+    </select>
+    <div id="active-filters" style="display:flex;gap:5px;align-items:center"></div>
+    <div class="tb-right">
+      <button class="btn btn-s btn-sm" onclick="loadCerts()">↻</button>
+      <button class="btn btn-p btn-sm" onclick="openNewCert()">+ Add Cert</button>
+    </div>
+  </div>
+  <div class="content"><div class="cert-grid" id="cert-grid"><div class="loading"><div class="spin"></div></div></div></div>
+</div>
+
+<!-- Certbot view -->
+<div id="view-certbot" class="view" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+  <div class="toolbar"><h2 style="font-size:14px;font-weight:600;">🤖 Certbot / Let's Encrypt + Cloudflare DNS</h2></div>
+  <div class="content" style="max-width:700px"><div id="certbot-content"><div class="loading"><div class="spin"></div></div></div></div>
+</div>
+
+<!-- Notifications view -->
+<div id="view-notifications" class="view" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+  <div class="toolbar"><h2 style="font-size:14px;font-weight:600;">🔔 Expiry Notifications</h2>
+    <div class="tb-right"><button class="btn btn-s btn-sm" onclick="runNotify()">Run Check Now</button></div></div>
+  <div class="content" style="max-width:660px"><div id="notify-content"></div></div>
+</div>
+
+<!-- Account view -->
+<div id="view-account" class="view" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+  <div class="toolbar"><h2 style="font-size:14px;font-weight:600;">👤 Account &amp; Security</h2></div>
+  <div class="content" style="max-width:600px"><div id="account-content"></div></div>
+</div>
+
+<!-- Settings view -->
+<div id="view-settings" class="view" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+  <div class="toolbar"><h2 style="font-size:14px;font-weight:600;">⚙ Settings</h2>
+    <div class="tb-right"><button class="btn btn-p btn-sm" onclick="saveSettings()">Save Settings</button></div></div>
+  <div class="content" style="max-width:580px">
+    <div class="settings-sec">
+      <h3>🔔 Global Slack Notifications</h3>
+      <div class="fr"><label class="lbl">Default Slack Webhook URL</label><input type="text" class="inp" id="set-slack" placeholder="https://hooks.slack.com/services/…"/></div>
+      <button class="btn btn-s btn-sm" onclick="testSlack()">Test Webhook</button>
+    </div>
+    <div class="settings-sec">
+      <h3>🏷 Tag Presets</h3>
+      <div class="fr"><label class="lbl">Preset Tags (comma separated)</label><input type="text" class="inp" id="set-tags" placeholder="work, personal, lab, production, staging"/></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- .main -->
+</div><!-- .app -->
+
+<!-- Panel overlay -->
+<div class="panel-ov" id="pov" onclick="closePanel()"></div>
+<div class="panel" id="cert-panel">
+  <div class="panel-hd">
+    <div class="panel-title"><span id="p-dot" style="width:9px;height:9px;border-radius:50%;background:var(--accent);display:inline-block"></span><span id="p-title">Certificate</span></div>
+    <div style="display:flex;gap:5px"><button class="btn btn-s btn-sm" onclick="openEdit()">✎ Edit</button><button class="btn btn-d btn-sm" onclick="doDelete()">🗑 Delete</button><button class="btn-g" onclick="closePanel()">✕</button></div>
+  </div>
+  <div class="panel-tabs">
+    <div class="pt active" onclick="switchTab('overview')">Overview</div>
+    <div class="pt" onclick="switchTab('files')">Files</div>
+    <div class="pt" onclick="switchTab('locations')">Locations</div>
+    <div class="pt" onclick="switchTab('export')">Export</div>
+    <div class="pt" onclick="switchTab('notify')">Notifications</div>
+  </div>
+  <div class="panel-body">
+    <div class="tc active" id="tab-overview"></div>
+    <div class="tc" id="tab-files"></div>
+    <div class="tc" id="tab-locations"></div>
+    <div class="tc" id="tab-export"></div>
+    <div class="tc" id="tab-notify"></div>
+  </div>
+</div>
+
+<!-- New/Edit cert modal -->
+<div class="modal-ov" id="cert-modal">
+  <div class="modal">
+    <div class="modal-hd"><div class="modal-title" id="cm-title">Add Certificate</div><button class="btn-g" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="fr2" style="margin-bottom:12px">
+        <div><label class="lbl">Name *</label><input type="text" class="inp" id="cm-name" placeholder="My SSL Certificate"/></div>
+        <div><label class="lbl">Domain / CN *</label><input type="text" class="inp" id="cm-domain" placeholder="example.com"/></div>
+      </div>
+      <div class="fr"><label class="lbl">Notes</label><textarea class="inp" id="cm-notes" rows="3" placeholder="Notes about this certificate…"></textarea></div>
+      <div class="fr"><label class="lbl">Tags</label><div class="tags-wrap" id="tags-wrap" onclick="document.getElementById('tag-in').focus()"><input class="tags-inp" id="tag-in" placeholder="Add tag…" onkeydown="tagKey(event)"/></div></div>
+      <div class="fr"><label class="lbl">Accent Color</label><div class="cp" id="color-picker"></div></div>
+      <div class="fr"><label class="lbl">Slack Webhook</label><input type="text" class="inp" id="cm-slack" placeholder="https://hooks.slack.com/…"/></div>
+      <div class="fr"><label class="lbl">Notify Days Before Expiry</label><div class="days-sel" id="modal-days">
+        <div class="day-chip sel" data-day="30">30d</div><div class="day-chip sel" data-day="14">14d</div><div class="day-chip sel" data-day="7">7d</div>
+        <div class="day-chip" data-day="60">60d</div><div class="day-chip" data-day="21">21d</div><div class="day-chip" data-day="3">3d</div><div class="day-chip" data-day="1">1d</div>
+      </div></div>
+    </div>
+    <div class="modal-ft"><button class="btn btn-s" onclick="closeModal()">Cancel</button><button class="btn btn-p" id="cm-save" onclick="saveCert()">Save</button></div>
+  </div>
+</div>
+
+<!-- Upload modal -->
+<div class="modal-ov" id="upload-modal">
+  <div class="modal">
+    <div class="modal-hd"><div class="modal-title">Upload File</div><button class="btn-g" onclick="closeUpload()">✕</button></div>
+    <div class="modal-body">
+      <div class="fr"><label class="lbl">File Type</label>
+        <select class="inp" id="up-type">
+          <option value="certificate">📜 Certificate (.pem / .crt / .cer)</option>
+          <option value="key">🔑 Private Key (.key / .pem)</option>
+          <option value="chain">🔗 Chain / Intermediate (.pem / .crt)</option>
+          <option value="csr">📋 CSR (.csr)</option>
+          <option value="other">📎 Other</option>
+        </select></div>
+      <div class="fr"><label><input type="checkbox" id="up-renewal" style="margin-right:6px"/>This is a renewal (archives previous version)</label></div>
+      <div class="upload-zone" id="drop-zone" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)" onclick="document.getElementById('file-in').click()">
+        <div style="font-size:26px;margin-bottom:7px">📂</div>
+        <div style="font-size:13px;color:var(--text2)">Drop file here or click to browse</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;font-family:var(--mono)" id="sel-file">No file selected</div>
+        <input type="file" id="file-in" style="display:none" onchange="onFileSelect(this)"/>
+      </div>
+    </div>
+    <div class="modal-ft"><button class="btn btn-s" onclick="closeUpload()">Cancel</button><button class="btn btn-p" onclick="doUpload()">Upload</button></div>
+  </div>
+</div>
+
+<!-- Location modal -->
+<div class="modal-ov" id="loc-modal">
+  <div class="modal">
+    <div class="modal-hd"><div class="modal-title" id="lm-title">Add Location</div><button class="btn-g" onclick="closeLoc()">✕</button></div>
+    <div class="modal-body">
+      <div class="fr"><label class="lbl">Location Name *</label><input type="text" class="inp" id="lm-name" placeholder="nginx on prod-web-01, AWS ALB, Cloudflare…"/></div>
+      <div class="fr2">
+        <div><label class="lbl">Responsible Person</label><input type="text" class="inp" id="lm-person" placeholder="John Doe / DevOps"/></div>
+        <div><label class="lbl">Contact Info</label><input type="text" class="inp" id="lm-contact" placeholder="john@co.com / #devops"/></div>
+      </div>
+      <div class="fr"><label class="lbl">Replacement Procedure</label><textarea class="inp" id="lm-notes" rows="4" placeholder="Step by step instructions to replace this certificate…"></textarea></div>
+    </div>
+    <div class="modal-ft"><button class="btn btn-s" onclick="closeLoc()">Cancel</button><button class="btn btn-p" onclick="saveLoc()">Save</button></div>
+  </div>
+</div>
+
+<div class="toast-c" id="toasts"></div>
+

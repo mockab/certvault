@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CertVault</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{--bg:#0a0d12;--bg2:#0f1318;--bg3:#141920;--bg4:#1a2030;--border:#1e2a38;--border2:#253040;--text:#c8d8e8;--text2:#7a9ab8;--text3:#4a6880;--accent:#00c8ff;--accent2:#0090c8;--green:#00e878;--yellow:#ffd040;--orange:#ff8c30;--red:#ff4060;--purple:#b060ff;--radius:6px;--font-mono:'IBM Plex Mono',monospace;--font:'IBM Plex Sans',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;min-height:100vh}
+.app{display:flex;height:100vh;overflow:hidden}
+/* Sidebar */
+.sidebar{width:220px;min-width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-header{padding:18px 14px 14px;border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;cursor:pointer}
+.logo-icon{width:30px;height:30px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.logo-text{font-family:var(--font-mono);font-weight:600;font-size:15px;color:var(--text)}
+.sidebar-nav{padding:10px 6px;flex:1;overflow-y:auto}
+.nav-sec-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;padding:0 8px;margin:14px 0 5px}
+.nav-btn{display:flex;align-items:center;gap:9px;width:100%;padding:7px 10px;border-radius:var(--radius);border:none;background:none;color:var(--text2);cursor:pointer;font-size:13px;font-family:var(--font);transition:all .15s;text-align:left}
+.nav-btn:hover{background:var(--bg3);color:var(--text)}
+.nav-btn.active{background:rgba(0,200,255,.1);color:var(--accent)}
+.nav-icon{font-size:14px;width:16px;text-align:center;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-family:var(--font-mono)}
+.sidebar-footer{padding:10px 6px;border-top:1px solid var(--border)}
+.user-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius);cursor:pointer;transition:background .15s}
+.user-row:hover{background:var(--bg3)}
+.user-avatar{width:26px;height:26px;background:var(--bg4);border:1px solid var(--border2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.user-name{font-size:12px;font-weight:500;flex:1}
+.logout-btn{font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;padding:3px}
+.logout-btn:hover{color:var(--red)}
+/* Main */
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+/* Stats bar */
+.stats-bar{display:flex;gap:1px;padding:10px 18px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
+.stat-item{flex:1;text-align:center;padding:7px;background:var(--bg3);border-radius:var(--radius);cursor:pointer;transition:background .15s}
+.stat-item:hover{background:var(--bg4)}
+.stat-item:first-child{border-radius:6px 0 0 6px}
+.stat-item:last-child{border-radius:0 6px 6px 0}
+.stat-val{font-family:var(--font-mono);font-size:20px;font-weight:600}
+.stat-label{font-size:9px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:.8px}
+.stat-ok .stat-val{color:var(--green)}.stat-warn .stat-val{color:var(--yellow)}.stat-crit .stat-val{color:var(--orange)}.stat-exp .stat-val{color:var(--red)}.stat-total .stat-val{color:var(--accent)}
+/* Toolbar */
+.toolbar{display:flex;align-items:center;gap:8px;padding:10px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
+.search-box{flex:1;max-width:320px;position:relative}
+.search-box input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px 7px 32px;border-radius:var(--radius);font-size:13px;font-family:var(--font);outline:none;transition:border-color .15s}
+.search-box input:focus{border-color:var(--accent2)}
+.search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;pointer-events:none}
+.sort-select{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:7px 10px;border-radius:var(--radius);font-size:12px;font-family:var(--font-mono);outline:none;cursor:pointer}
+.toolbar-right{margin-left:auto;display:flex;gap:6px}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:var(--radius);border:none;cursor:pointer;font-size:12px;font-family:var(--font);font-weight:500;transition:all .15s;text-decoration:none;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#000}.btn-primary:hover{background:#33d4ff}
+.btn-secondary{background:var(--bg3);border:1px solid var(--border2);color:var(--text2)}.btn-secondary:hover{background:var(--bg4);color:var(--text)}
+.btn-danger{background:rgba(255,64,96,.1);border:1px solid rgba(255,64,96,.3);color:var(--red)}.btn-danger:hover{background:rgba(255,64,96,.2)}
+.btn-ghost{background:none;border:none;color:var(--text3);padding:5px;border-radius:var(--radius)}.btn-ghost:hover{background:var(--bg4);color:var(--text)}
+/* Content */
+.content{flex:1;overflow-y:auto;padding:14px 18px}
+/* Cert grid */
+.cert-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.cert-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;overflow:hidden}
+.cert-card:hover{border-color:var(--border2);background:var(--bg3);transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.card-accent{height:3px}
+.card-body{padding:12px 14px}
+.card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.cert-name{font-weight:600;font-size:13px;line-height:1.3}
+.cert-domain{font-family:var(--font-mono);font-size:11px;color:var(--text3);margin-top:2px}
+.cert-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;font-family:var(--font-mono)}
+.badge-ok{background:rgba(0,232,120,.15);color:var(--green);border:1px solid rgba(0,232,120,.3)}
+.badge-warning{background:rgba(255,208,64,.15);color:var(--yellow);border:1px solid rgba(255,208,64,.3)}
+.badge-critical{background:rgba(255,140,48,.15);color:var(--orange);border:1px solid rgba(255,140,48,.3)}
+.badge-expired{background:rgba(255,64,96,.15);color:var(--red);border:1px solid rgba(255,64,96,.3)}
+.badge-unknown{background:rgba(122,154,184,.15);color:var(--text2);border:1px solid rgba(122,154,184,.3)}
+.cert-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+.tag{font-size:10px;padding:2px 6px;border-radius:10px;background:var(--bg4);color:var(--text3);border:1px solid var(--border);font-family:var(--font-mono)}
+.card-footer{padding:7px 14px;background:var(--bg);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-meta{font-size:11px;color:var(--text3);font-family:var(--font-mono);display:flex;gap:10px}
+/* Panel */
+.panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;opacity:0;pointer-events:none;transition:opacity .2s}
+.panel-overlay.open{opacity:1;pointer-events:all}
+.panel{position:fixed;right:0;top:0;bottom:0;width:660px;background:var(--bg2);border-left:1px solid var(--border);z-index:101;transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden}
+.panel.open{transform:translateX(0)}
+.panel-header{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.panel-title{font-weight:600;font-size:15px;display:flex;align-items:center;gap:10px}
+.panel-tabs{display:flex;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto}
+.panel-tab{padding:11px 16px;font-size:12px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.panel-tab:hover{color:var(--text)}
+.panel-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.panel-body{flex:1;overflow-y:auto}
+.tab-pane{display:none;padding:18px}
+.tab-pane.active{display:block}
+/* Forms */
+.form-row{margin-bottom:14px}
+.form-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-label{display:block;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 11px;border-radius:var(--radius);font-size:13px;font-family:var(--font);outline:none;transition:border-color .15s}
+.form-input:focus{border-color:var(--accent2)}
+.form-input::placeholder{color:var(--text3)}
+textarea.form-input{resize:vertical;min-height:70px}
+/* Upload zone */
+.upload-zone{border:2px dashed var(--border2);border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:all .15s}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(0,200,255,.05)}
+/* File list */
+.file-list{display:flex;flex-direction:column;gap:5px}
+.file-item{display:flex;align-items:center;gap:9px;padding:8px 11px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius)}
+.file-info{flex:1;min-width:0}
+.file-name{font-family:var(--font-mono);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-meta{font-size:10px;color:var(--text3);margin-top:1px;font-family:var(--font-mono)}
+.ftype-badge{font-size:10px;padding:2px 6px;border-radius:4px;font-family:var(--font-mono);font-weight:600;flex-shrink:0}
+.ftype-certificate{background:rgba(0,200,255,.15);color:var(--accent)}
+.ftype-key{background:rgba(176,96,255,.15);color:var(--purple)}
+.ftype-chain{background:rgba(0,232,120,.15);color:var(--green)}
+.ftype-csr{background:rgba(255,208,64,.15);color:var(--yellow)}
+.ftype-other{background:rgba(122,154,184,.15);color:var(--text2)}
+/* Info grid */
+.info-grid{display:grid;grid-template-columns:130px 1fr;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.info-k{padding:7px 11px;background:var(--bg3);font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);font-family:var(--font-mono)}
+.info-v{padding:7px 11px;background:var(--bg2);font-size:11px;color:var(--text);border-bottom:1px solid var(--border);font-family:var(--font-mono);word-break:break-all}
+.info-k:last-of-type,.info-v:last-of-type{border-bottom:none}
+/* Expiry bar */
+.exp-bar-wrap{margin:14px 0}
+.exp-bar-labels{display:flex;justify-content:space-between;margin-bottom:5px;font-size:11px}
+.exp-bar{height:5px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.exp-bar-fill{height:100%;border-radius:3px}
+/* Location card */
+.loc-card{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:8px}
+.loc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.loc-2col{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.loc-field label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:2px;font-weight:600}
+.loc-field span{font-size:12px;color:var(--text2)}
+/* Export */
+.export-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.export-opt{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;cursor:pointer;transition:all .15s;text-align:left;width:100%}
+.export-opt:hover{border-color:var(--accent2);background:var(--bg4)}
+.export-opt.selected{border-color:var(--accent);background:rgba(0,200,255,.08)}
+.export-icon{font-size:20px;margin-bottom:5px}
+.export-name{font-size:12px;font-weight:600}
+.export-desc{font-size:11px;color:var(--text3);margin-top:2px}
+/* PFX password generator */
+.pfx-section{margin-top:14px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:14px}
+.pfx-section h4{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+.pass-display{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin-bottom:10px;font-family:var(--font-mono);font-size:13px;flex-wrap:wrap}
+.pass-text{flex:1;word-break:break-all;color:var(--green)}
+.pass-opts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.pass-chip{padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:var(--bg4);color:var(--text3);cursor:pointer;font-size:11px;font-family:var(--font-mono);transition:all .15s;user-select:none}
+.pass-chip.on{background:rgba(0,200,255,.12);border-color:var(--accent);color:var(--accent)}
+.pass-length{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.pass-length input[type=range]{flex:1;accent-color:var(--accent)}
+.pass-length-val{font-family:var(--font-mono);font-size:12px;color:var(--text2);min-width:30px}
+/* Tags input */
+.tags-wrap{display:flex;flex-wrap:wrap;gap:5px;padding:7px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);cursor:text;min-height:38px;align-items:center}
+.tags-wrap:focus-within{border-color:var(--accent2)}
+.tag-item{display:flex;align-items:center;gap:4px;background:var(--bg4);border:1px solid var(--border2);padding:2px 7px;border-radius:10px;font-size:11px;font-family:var(--font-mono);color:var(--text2)}
+.tag-x{cursor:pointer;color:var(--text3);font-size:11px}.tag-x:hover{color:var(--red)}
+.tags-input{border:none;background:none;outline:none;color:var(--text);font-size:12px;font-family:var(--font-mono);min-width:80px}
+/* Color picker */
+.color-picker{display:flex;gap:7px;flex-wrap:wrap}
+.color-swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.color-swatch.selected{border-color:#fff;transform:scale(1.2)}
+/* Days chips */
+.days-sel{display:flex;gap:6px;flex-wrap:wrap}
+.day-chip{padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text3);cursor:pointer;font-family:var(--font-mono);font-size:11px;transition:all .15s}
+.day-chip.on{background:rgba(0,200,255,.12);border-color:var(--accent);color:var(--accent)}
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:10px;width:480px;max-width:95vw;max-height:85vh;overflow:hidden;display:flex;flex-direction:column}
+.modal-lg{width:580px}
+.modal-header{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-weight:600;font-size:14px}
+.modal-body{padding:18px;overflow-y:auto;flex:1}
+.modal-footer{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+/* Toast */
+.toasts{position:fixed;bottom:18px;right:18px;display:flex;flex-direction:column;gap:7px;z-index:400}
+.toast{padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;font-size:12px;max-width:300px;display:flex;align-items:center;gap:9px;animation:slideIn .2s ease;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.toast-success{border-left:3px solid var(--green)}.toast-error{border-left:3px solid var(--red)}.toast-info{border-left:3px solid var(--accent)}
+@keyframes slideIn{from{transform:translateX(50px);opacity:0}to{transform:none;opacity:1}}
+/* Empty state */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:70px 20px;text-align:center;grid-column:1/-1}
+.empty-icon{font-size:48px;opacity:.3;margin-bottom:14px}
+.empty-title{font-size:15px;font-weight:600;color:var(--text2);margin-bottom:6px}
+.empty-desc{font-size:12px;color:var(--text3);max-width:280px;line-height:1.6}
+/* Loading */
+.loading{display:flex;align-items:center;justify-content:center;padding:50px;grid-column:1/-1}
+.spinner{width:22px;height:22px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Section */
+.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sec-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px}
+/* SAN list */
+.san-list{display:flex;flex-wrap:wrap;gap:4px}
+.san-tag{font-size:11px;padding:2px 6px;background:var(--bg4);border:1px solid var(--border);border-radius:4px;font-family:var(--font-mono);color:var(--text2)}
+/* Filter chips */
+.filter-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:12px;background:rgba(0,200,255,.1);border:1px solid rgba(0,200,255,.3);color:var(--accent);font-size:11px;font-family:var(--font-mono);cursor:pointer}
+/* TOTP QR */
+#qrcode-wrap{display:flex;justify-content:center;margin:16px 0}
+#qrcode-wrap canvas,#qrcode-wrap img{border-radius:8px;border:8px solid #fff}
+.secret-display{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-family:var(--font-mono);font-size:14px;text-align:center;letter-spacing:3px;color:var(--accent);margin:10px 0;word-break:break-all}
+/* Certbot */
+.cb-status{padding:10px 14px;border-radius:6px;font-size:12px;font-family:var(--font-mono);white-space:pre-wrap;line-height:1.7;background:var(--bg);border:1px solid var(--border);max-height:300px;overflow-y:auto;margin-top:12px}
+.cb-job{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-bottom:8px}
+.cb-job-header{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-queued,.dot-pending{background:var(--text3)}
+.dot-running{background:var(--yellow);animation:pulse 1s infinite}
+.dot-completed{background:var(--green)}
+.dot-failed{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.pw-wrap{position:relative}.pw-wrap .form-input{padding-right:34px}
+.pw-eye{position:absolute;right:9px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px}
+.settings-sec{margin-bottom:24px}
+.settings-sec h3{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:12px;padding-bottom:7px;border-bottom:1px solid var(--border)}
+.view{display:none;flex-direction:column;flex:1;overflow:hidden}
+.view.active{display:flex}
+</style>
+</head>
+<body>
+<div class="app">
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo" onclick="showView('certs')">
+      <div class="logo-icon">🔐</div>
+      <span class="logo-text">CertVault</span>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-sec-label">Main</div>
+    <button class="nav-btn active" id="nav-certs" onclick="showView('certs')"><span class="nav-icon">📜</span>Certificates<span class="nav-badge" id="expiry-badge" style="display:none"></span></button>
+    <button class="nav-btn" id="nav-certbot" onclick="showView('certbot')"><span class="nav-icon">⚡</span>Let's Encrypt</button>
+    <button class="nav-btn" id="nav-notify" onclick="showView('notify')"><span class="nav-icon">🔔</span>Notifications</button>
+    <div class="nav-sec-label" id="tag-nav-label" style="display:none">Tags</div>
+    <div id="tag-nav-list"></div>
+    <div class="nav-sec-label">Account</div>
+    <button class="nav-btn" id="nav-account" onclick="showView('account')"><span class="nav-icon">👤</span>Account & MFA</button>
+    <button class="nav-btn" id="nav-settings" onclick="showView('settings')"><span class="nav-icon">⚙</span>Settings</button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-row" onclick="showView('account')">
+      <div class="user-avatar">👤</div>
+      <span class="user-name" id="sidebar-username">–</span>
+      <button class="logout-btn" onclick="event.stopPropagation();doLogout()" title="Sign out">⏻</button>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="openNewCert()">+ Add Certificate</button>
+  </div>
+</aside>
+
+<!-- Main area -->
+<div class="main">
+
+  <!-- ── Certs view ── -->
+  <div class="view active" id="view-certs">
+    <div class="stats-bar">
+      <div class="stat-item stat-total" onclick="clearFilters()"><div class="stat-val" id="stat-total">–</div><div class="stat-label">Total</div></div>
+      <div class="stat-item stat-ok" onclick="setFilterStatus('ok')"><div class="stat-val" id="stat-ok">–</div><div class="stat-label">Healthy</div></div>
+      <div class="stat-item stat-warn" onclick="setFilterStatus('warning')"><div class="stat-val" id="stat-warn">–</div><div class="stat-label">≤30 days</div></div>
+      <div class="stat-item stat-crit" onclick="setFilterStatus('critical')"><div class="stat-val" id="stat-crit">–</div><div class="stat-label">≤7 days</div></div>
+      <div class="stat-item stat-exp" onclick="setFilterStatus('expired')"><div class="stat-val" id="stat-exp">–</div><div class="stat-label">Expired</div></div>
+    </div>
+    <div class="toolbar">
+      <div class="search-box"><span class="search-icon">⌕</span><input type="text" id="search-input" placeholder="Search…" oninput="onSearch(this.value)"/></div>
+      <select class="sort-select" onchange="onSort(this.value)">
+        <option value="name">Name A–Z</option>
+        <option value="expiry">Expiry</option>
+        <option value="created">Newest</option>
+        <option value="domain">Domain</option>
+      </select>
+      <div id="active-filters" style="display:flex;gap:5px;align-items:center"></div>
+      <div class="toolbar-right">
+        <button class="btn btn-secondary" onclick="loadCerts()">↻</button>
+        <button class="btn btn-primary" onclick="openNewCert()">+ Add</button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="cert-grid" id="cert-grid"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+
+  <!-- ── Certbot view ── -->
+  <div class="view" id="view-certbot">
+    <div class="toolbar"><h2 style="font-size:14px;font-weight:600">⚡ Let's Encrypt via Cloudflare DNS</h2>
+      <div class="toolbar-right"><button class="btn btn-secondary" onclick="loadCertbotJobs()">↻ Refresh</button></div>
+    </div>
+    <div class="content" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+      <div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:18px">
+          <div class="sec-title" style="margin-bottom:14px">Issue / Renew Certificate</div>
+          <div class="form-row">
+            <label class="form-label">Primary Domain *</label>
+            <input type="text" class="form-input" id="cb-domain" placeholder="example.com"/>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Additional Domains (one per line)</label>
+            <textarea class="form-input" id="cb-extra" rows="2" placeholder="www.example.com&#10;api.example.com"></textarea>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Contact Email *</label>
+            <input type="email" class="form-input" id="cb-email" placeholder="admin@example.com"/>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Cloudflare API Token * <a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank" style="color:var(--accent);font-size:10px;margin-left:4px">Get token ↗</a></label>
+            <div class="pw-wrap"><input type="password" class="form-input" id="cb-cf-token" placeholder="Cloudflare API token (DNS:Edit permission)"/><button class="pw-eye" onclick="togglePass('cb-cf-token')">👁</button></div>
+            <div style="font-size:10px;color:var(--text3);margin-top:4px">Requires Zone:Read + DNS:Edit permissions on the target zone</div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Link to existing Certificate entry (optional)</label>
+            <select class="form-input" id="cb-cert-id">
+              <option value="">— Create standalone, don't link —</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" style="width:100%" onclick="issueCertbot()">⚡ Issue Certificate</button>
+          <div style="margin-top:12px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text3);line-height:1.7">
+            <strong style="color:var(--text2)">How it works:</strong> CertVault runs certbot with the Cloudflare DNS-01 challenge. Your server does <em>not</em> need port 80/443 open. The API token is used to temporarily add a TXT record for domain verification, then removed.
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-title" style="margin-bottom:10px">Recent Jobs</div>
+        <div id="certbot-jobs-list"><div style="color:var(--text3);font-size:12px">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Notifications view ── -->
+  <div class="view" id="view-notify">
+    <div class="toolbar"><h2 style="font-size:14px;font-weight:600">🔔 Notifications</h2>
+      <div class="toolbar-right"><button class="btn btn-secondary" onclick="runNotify()">Run Check Now</button></div>
+    </div>
+    <div class="content" style="max-width:680px" id="notify-content"></div>
+  </div>
+
+  <!-- ── Account view ── -->
+  <div class="view" id="view-account">
+    <div class="toolbar"><h2 style="font-size:14px;font-weight:600">👤 Account & Security</h2></div>
+    <div class="content" style="max-width:560px">
+      <div class="settings-sec">
+        <h3>🔑 Change Password</h3>
+        <div class="form-row"><label class="form-label">Current Password</label><div class="pw-wrap"><input type="password" class="form-input" id="cur-pw" placeholder="Current password"/><button class="pw-eye" onclick="togglePass('cur-pw')">👁</button></div></div>
+        <div class="form-2col">
+          <div class="form-row" style="margin-bottom:0"><label class="form-label">New Password</label><div class="pw-wrap"><input type="password" class="form-input" id="new-pw" placeholder="Min 8 chars"/><button class="pw-eye" onclick="togglePass('new-pw')">👁</button></div></div>
+          <div class="form-row" style="margin-bottom:0"><label class="form-label">Confirm New</label><div class="pw-wrap"><input type="password" class="form-input" id="new-pw2" placeholder="Confirm"/><button class="pw-eye" onclick="togglePass('new-pw2')">👁</button></div></div>
+        </div>
+        <div style="margin-top:12px"><button class="btn btn-primary" onclick="changePassword()">Update Password</button></div>
+      </div>
+
+      <div class="settings-sec">
+        <h3>📱 Two-Factor Authentication (TOTP)</h3>
+        <div id="totp-status-area">
+          <div style="color:var(--text3);font-size:12px">Loading…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Settings view ── -->
+  <div class="view" id="view-settings">
+    <div class="toolbar"><h2 style="font-size:14px;font-weight:600">⚙ Settings</h2>
+      <div class="toolbar-right"><button class="btn btn-primary" onclick="saveSettings()">Save</button></div>
+    </div>
+    <div class="content" style="max-width:560px">
+      <div class="settings-sec">
+        <h3>🔔 Global Slack Notifications</h3>
+        <div class="form-row"><label class="form-label">Default Slack Webhook URL</label><input type="text" class="form-input" id="s-slack" placeholder="https://hooks.slack.com/services/…"/></div>
+        <div style="margin-bottom:14px"><button class="btn btn-secondary" onclick="testSlack()">Test Webhook</button></div>
+        <div class="form-row"><label class="form-label">Default Notify Days</label><div class="days-sel" id="s-notify-days"><div class="day-chip" data-day="60">60d</div><div class="day-chip" data-day="30">30d</div><div class="day-chip" data-day="21">21d</div><div class="day-chip on" data-day="14">14d</div><div class="day-chip on" data-day="7">7d</div><div class="day-chip" data-day="3">3d</div><div class="day-chip" data-day="1">1d</div></div></div>
+      </div>
+      <div class="settings-sec">
+        <h3>🏷 Default Tags</h3>
+        <div class="form-row"><label class="form-label">Preset tag suggestions (comma separated)</label><input type="text" class="form-input" id="s-tags" placeholder="work, personal, lab, production"/></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- Cert Detail Panel -->
+<div class="panel-overlay" id="panel-overlay" onclick="closePanel()"></div>
+<div class="panel" id="cert-panel">
+  <div class="panel-header">
+    <div class="panel-title"><span id="panel-dot" style="width:9px;height:9px;border-radius:50%;background:var(--accent);display:inline-block"></span><span id="panel-cert-name">–</span></div>
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-secondary" onclick="openEditModal()" style="font-size:11px">✎ Edit</button>
+      <button class="btn btn-danger" onclick="deleteCert()" style="font-size:11px">🗑 Delete</button>
+      <button class="btn-ghost" onclick="closePanel()" style="font-size:16px">✕</button>
+    </div>
+  </div>
+  <div class="panel-tabs">
+    <div class="panel-tab active" onclick="switchTab('overview')">Overview</div>
+    <div class="panel-tab" onclick="switchTab('files')">Files</div>
+    <div class="panel-tab" onclick="switchTab('locations')">Locations</div>
+    <div class="panel-tab" onclick="switchTab('export')">Export</div>
+    <div class="panel-tab" onclick="switchTab('panelnotify')">Notifications</div>
+  </div>
+  <div class="panel-body">
+    <div class="tab-pane active" id="tab-overview"></div>
+    <div class="tab-pane" id="tab-files"></div>
+    <div class="tab-pane" id="tab-locations"></div>
+    <div class="tab-pane" id="tab-export"></div>
+    <div class="tab-pane" id="tab-panelnotify"></div>
+  </div>
+</div>
+
+<!-- New/Edit Cert Modal -->
+<div class="modal-bg" id="cert-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="cert-modal-title">Add Certificate</div><button class="btn-ghost" onclick="closeCertModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-2col">
+        <div class="form-row" style="margin-bottom:0"><label class="form-label">Name *</label><input type="text" class="form-input" id="m-name" placeholder="My Certificate"/></div>
+        <div class="form-row" style="margin-bottom:0"><label class="form-label">Domain / CN *</label><input type="text" class="form-input" id="m-domain" placeholder="example.com"/></div>
+      </div>
+      <div class="form-row" style="margin-top:12px"><label class="form-label">Notes</label><textarea class="form-input" id="m-notes" rows="2" placeholder="Notes…"></textarea></div>
+      <div class="form-row"><label class="form-label">Tags</label><div class="tags-wrap" id="m-tags-wrap" onclick="document.getElementById('m-tag-input').focus()"></div></div>
+      <div class="form-row"><label class="form-label">Accent Color</label><div class="color-picker" id="m-color-picker"></div></div>
+      <div class="form-row"><label class="form-label">Slack Webhook</label><input type="text" class="form-input" id="m-slack" placeholder="https://hooks.slack.com/…"/></div>
+      <div class="form-row"><label class="form-label">Notify Days</label><div class="days-sel" id="m-notify-days"><div class="day-chip on" data-day="30">30d</div><div class="day-chip on" data-day="14">14d</div><div class="day-chip on" data-day="7">7d</div><div class="day-chip" data-day="60">60d</div><div class="day-chip" data-day="21">21d</div><div class="day-chip" data-day="3">3d</div><div class="day-chip" data-day="1">1d</div></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeCertModal()">Cancel</button><button class="btn btn-primary" id="cert-modal-save-btn" onclick="saveCert()">Save</button></div>
+  </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal-bg" id="upload-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Upload File</div><button class="btn-ghost" onclick="closeUploadModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row"><label class="form-label">File Type</label>
+        <select class="form-input" id="u-file-type">
+          <option value="certificate">📜 Certificate (.pem/.crt/.cer)</option>
+          <option value="key">🔑 Private Key (.key/.pem)</option>
+          <option value="chain">🔗 Chain / Intermediate</option>
+          <option value="csr">📋 CSR</option>
+          <option value="other">📎 Other</option>
+        </select>
+      </div>
+      <div class="form-row" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="u-renewal"/><label for="u-renewal" style="font-size:12px;cursor:pointer">This is a renewal (marks old file inactive)</label></div>
+      <div class="upload-zone" id="drop-zone" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)" onclick="document.getElementById('file-input').click()">
+        <div style="font-size:26px;margin-bottom:8px">📂</div>
+        <div style="font-size:12px;color:var(--text2)">Drop file or click to browse</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px" id="sel-file-name">No file selected</div>
+        <input type="file" id="file-input" style="display:none" onchange="onFileSelect(this)"/>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeUploadModal()">Cancel</button><button class="btn btn-primary" onclick="doUpload()">Upload</button></div>
+  </div>
+</div>
+
+<!-- Location Modal -->
+<div class="modal-bg" id="loc-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="loc-modal-title">Add Location</div><button class="btn-ghost" onclick="closeLocModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row"><label class="form-label">Location Name *</label><input type="text" class="form-input" id="loc-name" placeholder="nginx on prod-web-01, AWS ALB…"/></div>
+      <div class="form-2col">
+        <div class="form-row" style="margin-bottom:0"><label class="form-label">Responsible Person</label><input type="text" class="form-input" id="loc-person" placeholder="Jane Doe"/></div>
+        <div class="form-row" style="margin-bottom:0"><label class="form-label">Contact Info</label><input type="text" class="form-input" id="loc-contact" placeholder="jane@example.com"/></div>
+      </div>
+      <div class="form-row" style="margin-top:12px"><label class="form-label">Replacement Procedure</label><textarea class="form-input" id="loc-notes" rows="4" placeholder="Step-by-step instructions…"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeLocModal()">Cancel</button><button class="btn btn-primary" onclick="saveLoc()">Save</button></div>
+  </div>
+</div>
+
+<!-- TOTP Setup Modal -->
+<div class="modal-bg" id="totp-modal">
+  <div class="modal modal-lg">
+    <div class="modal-header"><div class="modal-title">Set Up Two-Factor Authentication</div><button class="btn-ghost" onclick="closeTotpModal()">✕</button></div>
+    <div class="modal-body">
+      <div id="totp-step-1">
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">Scan this QR code with your authenticator app (Google Authenticator, Authy, 1Password, etc.)</p>
+        <div id="qrcode-wrap"></div>
+        <div class="form-row"><label class="form-label">Or enter manually</label><div class="secret-display" id="totp-secret-display">–</div></div>
+        <div class="form-row"><label class="form-label">Confirm code from your app</label><input type="text" class="form-input" id="totp-confirm-code" placeholder="123456" maxlength="6" inputmode="numeric" style="text-align:center;font-size:22px;font-family:var(--font-mono);letter-spacing:6px"/></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeTotpModal()">Cancel</button><button class="btn btn-primary" onclick="confirmTotp()">Enable MFA</button></div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let currentCertId = null, currentCert = null;
+let editMode = false, editTags = [], selectedColor = '#4f8ef7';
+let filterTag = null, filterStatus = null, searchQuery = '', sortBy = 'name';
+let pendingFile = null, editLocId = null;
+let currentUser = null;
+
+const COLORS = ['#4f8ef7','#00c8ff','#00e878','#b060ff','#ff8c30','#ff4060','#ffd040','#ff69b4','#00d4aa','#7b68ee'];
+const EXPORT_FORMATS = [
+  {id:'zip',    icon:'🗜',  name:'ZIP Archive',       desc:'All files in a ZIP'},
+  {id:'pem_bundle', icon:'📄', name:'PEM Bundle',    desc:'Cert + chain + key concatenated'},
+  {id:'cert_only',  icon:'📜', name:'Certificate',    desc:'Cert PEM only'},
+  {id:'chain_only', icon:'🔗', name:'Chain Only',     desc:'Intermediate chain PEM'},
+  {id:'key_only',   icon:'🔑', name:'Private Key',   desc:'Key PEM only'},
+  {id:'pfx',        icon:'📦', name:'PFX / PKCS#12', desc:'Password-protected single file'},
+  {id:'der',        icon:'⬡',  name:'DER Binary',     desc:'Binary DER encoding'},
+];
+
+// ── Init ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  initColorPicker();
+  initAllDayChips();
+  await fetchUser();
+  loadStats();
+  loadCerts();
+  loadTagNav();
+  loadSettings();
+});
+
+async function fetchUser() {
+  const r = await fetch('/api/auth/me');
+  if (r.status === 401) { window.location.href = '/login'; return; }
+  currentUser = await r.json();
+  document.getElementById('sidebar-username').textContent = currentUser.username;
+}
+
+async function doLogout() {
+  await fetch('/api/auth/logout', {method:'POST'});
+  window.location.href = '/login';
+}
+
+// ── Views ──────────────────────────────────────────────────────────────────
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  const nb = document.getElementById('nav-' + name);
+  if (nb) nb.classList.add('active');
+
+  if (name === 'certs')    { loadCerts(); loadStats(); }
+  if (name === 'certbot')  { loadCertbotJobs(); populateCbCertSelect(); }
+  if (name === 'notify')   renderNotifyView();
+  if (name === 'account')  renderAccountView();
+  if (name === 'settings') loadSettings();
+}
+
+// ── Stats ──────────────────────────────────────────────────────────────────
+async function loadStats() {
+  const d = await fetch('/api/stats').then(r => r.json());
+  document.getElementById('stat-total').textContent = d.total;
+  document.getElementById('stat-ok').textContent    = d.expiry.ok;
+  document.getElementById('stat-warn').textContent  = d.expiry.warning;
+  document.getElementById('stat-crit').textContent  = d.expiry.critical;
+  document.getElementById('stat-exp').textContent   = d.expiry.expired;
+
+  const urgent = (d.expiry.critical || 0) + (d.expiry.expired || 0);
+  const badge = document.getElementById('expiry-badge');
+  badge.style.display = urgent ? '' : 'none';
+  if (urgent) badge.textContent = urgent;
+
+  loadTagNav(d.tags);
+}
+
+function loadTagNav(tags) {
+  if (!tags) { fetch('/api/stats').then(r=>r.json()).then(d=>loadTagNav(d.tags)); return; }
+  const list = document.getElementById('tag-nav-list');
+  const label = document.getElementById('tag-nav-label');
+  list.innerHTML = '';
+  const entries = Object.entries(tags);
+  label.style.display = entries.length ? '' : 'none';
+  entries.forEach(([tag, count]) => {
+    const btn = document.createElement('button');
+    btn.className = 'nav-btn' + (filterTag === tag ? ' active' : '');
+    btn.innerHTML = `<span class="nav-icon">🏷</span>${esc(tag)}<span style="margin-left:auto;font-size:10px;color:var(--text3);font-family:var(--font-mono)">${count}</span>`;
+    btn.onclick = () => { filterTag = filterTag === tag ? null : tag; showView('certs'); };
+    list.appendChild(btn);
+  });
+}
+
+// ── Cert List ──────────────────────────────────────────────────────────────
+async function loadCerts() {
+  const grid = document.getElementById('cert-grid');
+  grid.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const params = new URLSearchParams({sort: sortBy});
+  if (searchQuery) params.set('search', searchQuery);
+  if (filterTag) params.set('tag', filterTag);
+
+  const r = await fetch('/api/certs?' + params);
+  if (r.status === 401) { window.location.href = '/login'; return; }
+  let certs = await r.json();
+  if (filterStatus) certs = certs.filter(c => c.expiry_status === filterStatus);
+
+  // Active filters
+  const af = document.getElementById('active-filters');
+  af.innerHTML = '';
+  if (filterTag) af.innerHTML += `<span class="filter-chip" onclick="filterTag=null;loadCerts()">🏷 ${esc(filterTag)} ✕</span>`;
+  if (filterStatus) af.innerHTML += `<span class="filter-chip" onclick="filterStatus=null;loadCerts()">${filterStatus} ✕</span>`;
+
+  if (!certs.length) {
+    grid.innerHTML = `<div class="empty"><div class="empty-icon">🔐</div><div class="empty-title">${searchQuery||filterTag||filterStatus?'No results':'No certificates yet'}</div><div class="empty-desc">${searchQuery||filterTag||filterStatus?'Adjust your search or filters.':'Click "+ Add Certificate" to get started.'}</div></div>`;
+    return;
+  }
+  grid.innerHTML = certs.map(certCardHTML).join('');
+}
+
+function certCardHTML(c) {
+  const st = c.expiry_status || 'unknown';
+  const days = c.days_until_expiry;
+  const badgeText = st==='expired' ? 'EXPIRED' : st==='unknown' ? 'No cert' : days !== null ? `${days}d` : '–';
+  const tags = (c.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('');
+  return `<div class="cert-card" onclick="openCert(${c.id})">
+    <div class="card-accent" style="background:${c.color||'#4f8ef7'}"></div>
+    <div class="card-body">
+      <div class="card-header">
+        <div><div class="cert-name">${esc(c.name)}</div><div class="cert-domain">${esc(c.domain)}</div></div>
+        <span class="cert-badge badge-${st}">${badgeText}</span>
+      </div>
+      ${c.not_after?`<div style="font-size:10px;color:var(--text3);font-family:var(--font-mono);margin-bottom:5px">Exp: ${fmtDate(c.not_after)}</div>`:''}
+      ${tags?`<div class="cert-tags">${tags}</div>`:''}
+    </div>
+    <div class="card-footer"><div class="card-meta"><span>📎 ${c.file_count}</span>${c.notify_slack?'<span>🔔</span>':''}</div></div>
+  </div>`;
+}
+
+function setFilterStatus(s) { filterStatus = filterStatus===s ? null : s; loadCerts(); }
+function clearFilters() { filterTag=null; filterStatus=null; loadCerts(); }
+function onSearch(v) { searchQuery=v; loadCerts(); }
+function onSort(v) { sortBy=v; loadCerts(); }
+
+// ── Cert Detail Panel ──────────────────────────────────────────────────────
+async function openCert(id) {
+  currentCertId = id;
+  const r = await fetch('/api/certs/' + id);
+  if (!r.ok) return;
+  currentCert = await r.json();
+  document.getElementById('panel-cert-name').textContent = currentCert.name;
+  document.getElementById('panel-dot').style.background = currentCert.color || '#4f8ef7';
+  renderOverview(); renderFiles(); renderLocations(); renderExport(); renderPanelNotify();
+  document.querySelectorAll('.panel-tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  document.querySelectorAll('.tab-pane').forEach((p,i)=>p.classList.toggle('active',i===0));
+  document.getElementById('panel-overlay').classList.add('open');
+  document.getElementById('cert-panel').classList.add('open');
+}
+
+function closePanel() {
+  document.getElementById('panel-overlay').classList.remove('open');
+  document.getElementById('cert-panel').classList.remove('open');
+  currentCertId=null; currentCert=null;
+}
+
+function switchTab(name) {
+  const tabs = ['overview','files','locations','export','panelnotify'];
+  document.querySelectorAll('.panel-tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+function renderOverview() {
+  const c = currentCert;
+  const statusColors = {ok:'var(--green)',warning:'var(--yellow)',critical:'var(--orange)',expired:'var(--red)',unknown:'var(--text3)'};
+  const sc = statusColors[c.expiry_status||'unknown'];
+
+  let expBar = '';
+  if (c.days_until_expiry!==null && c.not_before && c.not_after) {
+    try {
+      const start = new Date(c.not_before), end = new Date(c.not_after), now = new Date();
+      const pct = Math.max(0, Math.min(100, ((now-start)/(end-start))*100));
+      expBar = `<div class="exp-bar-wrap">
+        <div class="exp-bar-labels">
+          <span style="font-size:10px;color:var(--text3);font-family:var(--font-mono)">Issued: ${fmtDate(c.not_before)}</span>
+          <span style="color:${sc};font-size:11px;font-family:var(--font-mono);font-weight:600">${c.days_until_expiry>=0?c.days_until_expiry+'d remaining':'EXPIRED'}</span>
+        </div>
+        <div class="exp-bar"><div class="exp-bar-fill" style="width:${pct}%;background:${sc}"></div></div>
+        <div style="font-size:10px;color:var(--text3);font-family:var(--font-mono);margin-top:3px;text-align:right">Expires: ${fmtDate(c.not_after)}</div>
+      </div>`;
+    } catch(e){}
+  }
+
+  let subj={}, iss={};
+  try{subj=JSON.parse(c.subject||'{}')}catch(e){}
+  try{iss=JSON.parse(c.issuer||'{}')}catch(e){}
+  const cn = subj.commonName||subj.CN||c.domain;
+  const issName = iss.organizationName||iss.O||iss.commonName||iss.CN||'Unknown';
+
+  const san = c.san||[];
+  const sanHTML = san.length ? `<div class="san-list">${san.map(s=>`<span class="san-tag">${esc(s)}</span>`).join('')}</div>` : '<span style="color:var(--text3);font-size:12px">None</span>';
+  const tags = (c.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('') || '<span style="color:var(--text3);font-size:12px">No tags</span>';
+
+  const infoRows = [
+    ['Common Name', cn],['Issuer', issName],
+    ['Serial', c.serial ? c.serial.slice(0,20)+(c.serial.length>20?'…':'') : '–'],
+    ['Algorithm', c.signature_algorithm||'–'],['Key Size', c.key_size?c.key_size+' bits':'–'],
+    c.is_ca ? ['Type','🏛 Certificate Authority'] : null,
+  ].filter(Boolean);
+
+  document.getElementById('tab-overview').innerHTML = `
+    ${expBar}
+    <div class="sec-header"><div class="sec-title">Certificate Details</div></div>
+    <div class="info-grid">${infoRows.map(([k,v])=>`<div class="info-k">${k}</div><div class="info-v">${esc(String(v))}</div>`).join('')}</div>
+    <div class="sec-header" style="margin-top:16px"><div class="sec-title">SANs</div></div>${sanHTML}
+    <div class="sec-header" style="margin-top:16px"><div class="sec-title">Tags</div></div>
+    <div class="cert-tags">${tags}</div>
+    ${c.notes?`<div class="sec-header" style="margin-top:16px"><div class="sec-title">Notes</div></div><div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:11px;font-size:12px;color:var(--text2);white-space:pre-wrap;line-height:1.6">${esc(c.notes)}</div>`:''}
+  `;
+}
+
+function renderFiles() {
+  const files = currentCert.files||[];
+  const active = files.filter(f=>f.is_active), old = files.filter(f=>!f.is_active);
+  const icons = {certificate:'📜',key:'🔑',chain:'🔗',csr:'📋',other:'📎'};
+  const renderList = list => list.map(f=>`
+    <div class="file-item">
+      <span style="font-size:15px">${icons[f.file_type]||'📎'}</span>
+      <div class="file-info"><div class="file-name">${esc(f.filename)}</div><div class="file-meta">v${f.version} · ${fmtDate(f.uploaded_at)}</div></div>
+      <span class="ftype-badge ftype-${f.file_type}">${f.file_type}</span>
+      ${!f.is_active?'<span style="font-size:10px;color:var(--text3);background:var(--bg4);padding:2px 6px;border-radius:4px">old</span>':''}
+      <button class="btn btn-secondary" style="font-size:11px;padding:4px 8px" onclick="downloadFile(${f.id})">↓</button>
+      <button class="btn btn-ghost" style="font-size:11px" onclick="confirmDelFile(${f.id})">🗑</button>
+    </div>`).join('');
+
+  document.getElementById('tab-files').innerHTML = `
+    <div class="sec-header"><div class="sec-title">Active Files (${active.length})</div><button class="btn btn-primary" onclick="openUploadModal()" style="font-size:11px">+ Upload</button></div>
+    <div class="file-list">${active.length?renderList(active):'<div style="color:var(--text3);font-size:12px;padding:20px 0;text-align:center">No files yet</div>'}</div>
+    ${old.length?`<div class="sec-header" style="margin-top:16px"><div class="sec-title">Previous Versions (${old.length})</div></div><div class="file-list">${renderList(old)}</div>`:''}
+  `;
+}
+
+function renderLocations() {
+  const locs = currentCert.location_details||[];
+  const html = locs.map(l=>`
+    <div class="loc-card">
+      <div class="loc-header"><div style="font-weight:600;font-size:13px">📍 ${esc(l.location_name)}</div>
+        <div style="display:flex;gap:5px"><button class="btn btn-secondary" style="font-size:11px" onclick="openEditLoc(${l.id})">✎</button><button class="btn btn-danger" style="font-size:11px" onclick="deleteLoc(${l.id})">🗑</button></div>
+      </div>
+      <div class="loc-2col">
+        <div class="loc-field"><label>Responsible</label><span>${esc(l.responsible_person||'—')}</span></div>
+        <div class="loc-field"><label>Contact</label><span>${esc(l.contact_info||'—')}</span></div>
+      </div>
+      ${l.replacement_notes?`<div style="margin-top:9px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;font-weight:600">Replacement Procedure</div><div style="font-size:11px;color:var(--text2);background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:9px;white-space:pre-wrap;line-height:1.6">${esc(l.replacement_notes)}</div></div>`:''}
+    </div>`).join('');
+
+  document.getElementById('tab-locations').innerHTML = `
+    <div class="sec-header"><div class="sec-title">Locations (${locs.length})</div><button class="btn btn-primary" style="font-size:11px" onclick="openAddLoc()">+ Add</button></div>
+    ${html||'<div style="text-align:center;padding:36px 0"><div style="font-size:30px;opacity:.3;margin-bottom:10px">📍</div><div style="color:var(--text3);font-size:12px">No locations added yet</div></div>'}
+  `;
+}
+
+function renderExport() {
+  window.selectedFmt = 'zip';
+  document.getElementById('tab-export').innerHTML = `
+    <div class="sec-header"><div class="sec-title">Export Format</div></div>
+    <div class="export-grid">${EXPORT_FORMATS.map(f=>`
+      <button class="export-opt ${f.id==='zip'?'selected':''}" onclick="selectFmt('${f.id}',this)">
+        <div class="export-icon">${f.icon}</div>
+        <div class="export-name">${f.name}</div>
+        <div class="export-desc">${f.desc}</div>
+      </button>`).join('')}
+    </div>
+
+    <div id="pfx-section" style="display:none">
+      <div class="pfx-section">
+        <h4>PFX Password</h4>
+        <div class="pass-display"><span class="pass-text" id="pfx-pass-text">—</span>
+          <button class="btn btn-secondary" style="font-size:10px;padding:3px 8px" onclick="copyPfxPass()" title="Copy">📋</button>
+          <button class="btn btn-ghost" style="font-size:11px" onclick="togglePass('pfx-manual-input')">👁</button>
+        </div>
+        <div class="pass-opts">
+          <div class="pass-chip on" id="pc-upper" onclick="togglePassChip(this)">ABC</div>
+          <div class="pass-chip on" id="pc-lower" onclick="togglePassChip(this)">abc</div>
+          <div class="pass-chip on" id="pc-digits" onclick="togglePassChip(this)">123</div>
+          <div class="pass-chip on" id="pc-special" onclick="togglePassChip(this)">!@#</div>
+        </div>
+        <div class="pass-length">
+          <span style="font-size:11px;color:var(--text3)">Length:</span>
+          <input type="range" min="8" max="64" value="24" id="pass-len-range" oninput="document.getElementById('pass-len-val').textContent=this.value"/>
+          <span class="pass-length-val" id="pass-len-val">24</span>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary" style="font-size:11px" onclick="genPfxPass()">🎲 Generate</button>
+          <div style="flex:1;position:relative"><input type="password" class="form-input" id="pfx-manual-input" placeholder="Or type custom password" oninput="document.getElementById('pfx-pass-text').textContent=this.value||'—'"/><button class="pw-eye" onclick="togglePass('pfx-manual-input')">👁</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px">
+      <button class="btn btn-primary" onclick="doExport()">⬇ Export</button>
+    </div>
+  `;
+  genPfxPass();
+}
+
+function selectFmt(fmt, el) {
+  document.querySelectorAll('.export-opt').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  window.selectedFmt = fmt;
+  document.getElementById('pfx-section').style.display = fmt==='pfx' ? 'block' : 'none';
+}
+
+function togglePassChip(el) { el.classList.toggle('on'); genPfxPass(); }
+
+async function genPfxPass() {
+  const opts = {
+    uppercase: document.getElementById('pc-upper')?.classList.contains('on') ?? true,
+    lowercase: document.getElementById('pc-lower')?.classList.contains('on') ?? true,
+    digits:    document.getElementById('pc-digits')?.classList.contains('on') ?? true,
+    special:   document.getElementById('pc-special')?.classList.contains('on') ?? true,
+    length:    parseInt(document.getElementById('pass-len-range')?.value || '24'),
+  };
+  const r = await fetch('/api/generate_password', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(opts)});
+  const d = await r.json();
+  if (d.password) {
+    document.getElementById('pfx-pass-text').textContent = d.password;
+    if (document.getElementById('pfx-manual-input')) document.getElementById('pfx-manual-input').value = '';
+  }
+}
+
+function copyPfxPass() {
+  const pw = document.getElementById('pfx-pass-text').textContent;
+  if (pw && pw !== '—') { navigator.clipboard.writeText(pw).then(()=>toast('Password copied!','success')); }
+}
+
+async function doExport() {
+  const fmt = window.selectedFmt || 'zip';
+  let password = '';
+  if (fmt === 'pfx') {
+    const manualInput = document.getElementById('pfx-manual-input').value;
+    password = manualInput || document.getElementById('pfx-pass-text').textContent;
+    if (!password || password === '—') return toast('Enter or generate a PFX password', 'error');
+  }
+  try {
+    const r = await fetch(`/api/certs/${currentCertId}/export`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({format:fmt, password})
+    });
+    if (!r.ok) { const e=await r.json(); return toast('Export failed: '+(e.error||'?'),'error'); }
+    const blob = await r.blob();
+    const cd = r.headers.get('Content-Disposition')||'';
+    const fn = cd.match(/filename=([^;]+)/)?.[1]?.replace(/"/g,'')||'cert_export';
+    const url = URL.createObjectURL(blob);
+    Object.assign(document.createElement('a'),{href:url,download:fn}).click();
+    URL.revokeObjectURL(url);
+    toast('Exported!','success');
+  } catch(e) { toast('Export error: '+e.message,'error'); }
+}
+
+function renderPanelNotify() {
+  const c = currentCert;
+  const days = c.notify_days||[30,14,7];
+  document.getElementById('tab-panelnotify').innerHTML = `
+    <div class="form-row"><label class="form-label">Slack Webhook URL</label><input type="text" class="form-input" id="pn-slack" value="${esc(c.notify_slack||'')}" placeholder="https://hooks.slack.com/…"/></div>
+    <div class="form-row"><label class="form-label">Notify Days</label>
+      <div class="days-sel" id="pn-days">${[60,30,21,14,7,3,1].map(d=>`<div class="day-chip ${days.includes(d)?'on':''}" data-day="${d}" onclick="this.classList.toggle('on')">${d}d</div>`).join('')}</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn btn-secondary" onclick="testPanelSlack()">Test</button>
+      <button class="btn btn-primary" onclick="savePanelNotify()">Save</button>
+    </div>
+    <div style="margin-top:16px;padding:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text2);line-height:1.7">
+      CertVault checks expiry hourly and sends one Slack message per day per threshold.
+    </div>
+  `;
+}
+
+async function testPanelSlack() {
+  const url = document.getElementById('pn-slack').value;
+  if (!url) return toast('Enter webhook URL','error');
+  const r = await fetch('/api/notify/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({webhook_url:url})});
+  const d = await r.json();
+  d.ok ? toast('Test sent!','success') : toast('Failed: '+d.error,'error');
+}
+
+async function savePanelNotify() {
+  const slack = document.getElementById('pn-slack').value;
+  const days = Array.from(document.getElementById('pn-days').querySelectorAll('.day-chip.on')).map(c=>parseInt(c.dataset.day));
+  const r = await fetch('/api/certs/'+currentCertId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...currentCert,notify_slack:slack,notify_days:days})});
+  if (r.ok) { toast('Saved','success'); openCert(currentCertId); } else toast('Save failed','error');
+}
+
+// ── New/Edit Cert ──────────────────────────────────────────────────────────
+function openNewCert() {
+  editMode=false; editTags=[]; selectedColor='#4f8ef7';
+  document.getElementById('cert-modal-title').textContent='Add Certificate';
+  document.getElementById('cert-modal-save-btn').textContent='Save';
+  ['m-name','m-domain','m-notes','m-slack'].forEach(id=>document.getElementById(id).value='');
+  renderModalTags([]);
+  resetDayChips('m-notify-days',[30,14,7]);
+  setColor('#4f8ef7');
+  document.getElementById('cert-modal').classList.add('open');
+}
+
+function openEditModal() {
+  if (!currentCert) return;
+  editMode=true; editTags=[...(currentCert.tags||[])]; selectedColor=currentCert.color||'#4f8ef7';
+  document.getElementById('cert-modal-title').textContent='Edit Certificate';
+  document.getElementById('cert-modal-save-btn').textContent='Save Changes';
+  document.getElementById('m-name').value=currentCert.name;
+  document.getElementById('m-domain').value=currentCert.domain;
+  document.getElementById('m-notes').value=currentCert.notes||'';
+  document.getElementById('m-slack').value=currentCert.notify_slack||'';
+  renderModalTags(editTags);
+  resetDayChips('m-notify-days',currentCert.notify_days||[30,14,7]);
+  setColor(currentCert.color||'#4f8ef7');
+  document.getElementById('cert-modal').classList.add('open');
+}
+
+function closeCertModal() { document.getElementById('cert-modal').classList.remove('open'); }
+
+async function saveCert() {
+  const name=document.getElementById('m-name').value.trim();
+  const domain=document.getElementById('m-domain').value.trim();
+  if (!name||!domain) return toast('Name and domain required','error');
+  const data={name,domain,notes:document.getElementById('m-notes').value,tags:editTags,
+    notify_slack:document.getElementById('m-slack').value,
+    notify_days:getSelectedDays('m-notify-days'),color:selectedColor};
+  if (editMode) {
+    const r=await fetch('/api/certs/'+currentCertId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...currentCert,...data})});
+    if (r.ok) { toast('Updated','success'); closeCertModal(); openCert(currentCertId); loadCerts(); loadStats(); }
+    else toast('Update failed','error');
+  } else {
+    const r=await fetch('/api/certs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    if (r.ok) {
+      const d=await r.json(); toast('Added!','success'); closeCertModal(); loadCerts(); loadStats(); loadTagNav();
+      setTimeout(()=>openCert(d.id),300);
+    } else { const e=await r.json(); toast('Error: '+(e.error||'?'),'error'); }
+  }
+}
+
+async function deleteCert() {
+  if (!confirm(`Delete "${currentCert.name}"?`)) return;
+  const r=await fetch('/api/certs/'+currentCertId,{method:'DELETE'});
+  if (r.ok) { toast('Deleted','success'); closePanel(); loadCerts(); loadStats(); loadTagNav(); }
+  else toast('Delete failed','error');
+}
+
+// ── Tags ───────────────────────────────────────────────────────────────────
+function renderModalTags(tags) {
+  const wrap = document.getElementById('m-tags-wrap');
+  wrap.innerHTML = '';
+  tags.forEach(t => {
+    const span = document.createElement('span');
+    span.className = 'tag-item';
+    span.innerHTML = `${esc(t)} <span class="tag-x" onclick="removeTag('${esc(t)}')">✕</span>`;
+    wrap.appendChild(span);
+  });
+  const inp = document.createElement('input');
+  inp.className = 'tags-input'; inp.id = 'm-tag-input'; inp.placeholder = 'Add tag…';
+  inp.onkeydown = e => {
+    if ((e.key==='Enter'||e.key===',') && inp.value.trim()) {
+      e.preventDefault(); const t=inp.value.trim().replace(/,/g,'');
+      if (t&&!editTags.includes(t)) { editTags.push(t); renderModalTags(editTags); }
+      inp.value='';
+    }
+    if (e.key==='Backspace'&&!inp.value&&editTags.length) { editTags.pop(); renderModalTags(editTags); }
+  };
+  wrap.appendChild(inp);
+}
+function removeTag(t) { editTags=editTags.filter(x=>x!==t); renderModalTags(editTags); }
+
+// ── Color Picker ───────────────────────────────────────────────────────────
+function initColorPicker() {
+  const cp = document.getElementById('m-color-picker');
+  COLORS.forEach(c => {
+    const s = document.createElement('div');
+    s.className='color-swatch'; s.style.background=c;
+    s.onclick=()=>setColor(c); cp.appendChild(s);
+  });
+}
+function setColor(color) {
+  selectedColor=color;
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.toggle('selected',s.style.background===color||rgbToHex(s.style.background)===color));
+}
+function rgbToHex(rgb) {
+  const m=rgb.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+  if (!m) return rgb;
+  return '#'+[m[1],m[2],m[3]].map(n=>parseInt(n).toString(16).padStart(2,'0')).join('');
+}
+
+// ── Day Chips ──────────────────────────────────────────────────────────────
+function initAllDayChips() {
+  document.querySelectorAll('.days-sel').forEach(sel => {
+    sel.querySelectorAll('.day-chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
+  });
+}
+function getSelectedDays(id) {
+  return Array.from(document.getElementById(id).querySelectorAll('.day-chip.on')).map(c=>parseInt(c.dataset.day));
+}
+function resetDayChips(id, days) {
+  document.getElementById(id).querySelectorAll('.day-chip').forEach(c=>c.classList.toggle('on',days.includes(parseInt(c.dataset.day))));
+}
+
+// ── File Upload ────────────────────────────────────────────────────────────
+function openUploadModal() {
+  pendingFile=null; document.getElementById('sel-file-name').textContent='No file selected';
+  document.getElementById('u-renewal').checked=false;
+  document.getElementById('upload-modal').classList.add('open');
+}
+function closeUploadModal() { document.getElementById('upload-modal').classList.remove('open'); }
+function onFileSelect(inp) { if (inp.files[0]) { pendingFile=inp.files[0]; document.getElementById('sel-file-name').textContent=pendingFile.name; } }
+function handleDrop(e) { e.preventDefault(); document.getElementById('drop-zone').classList.remove('drag'); if (e.dataTransfer.files[0]) { pendingFile=e.dataTransfer.files[0]; document.getElementById('sel-file-name').textContent=pendingFile.name; } }
+async function doUpload() {
+  if (!pendingFile) return toast('Select a file','error');
+  const fd=new FormData(); fd.append('file',pendingFile);
+  fd.append('file_type',document.getElementById('u-file-type').value);
+  fd.append('renewal',document.getElementById('u-renewal').checked?'true':'false');
+  const r=await fetch(`/api/certs/${currentCertId}/upload`,{method:'POST',body:fd});
+  if (r.ok) { toast('Uploaded!','success'); closeUploadModal(); openCert(currentCertId); loadCerts(); loadStats(); }
+  else { const e=await r.json(); toast('Upload failed: '+(e.error||'?'),'error'); }
+}
+async function downloadFile(fileId) { window.location.href=`/api/certs/${currentCertId}/files/${fileId}/download`; }
+async function confirmDelFile(fileId) {
+  if (!confirm('Delete this file?')) return;
+  const r=await fetch(`/api/certs/${currentCertId}/files/${fileId}`,{method:'DELETE'});
+  if (r.ok) { toast('Deleted','success'); openCert(currentCertId); } else toast('Failed','error');
+}
+
+// ── Locations ──────────────────────────────────────────────────────────────
+function openAddLoc() { editLocId=null; document.getElementById('loc-modal-title').textContent='Add Location'; ['loc-name','loc-person','loc-contact','loc-notes'].forEach(id=>document.getElementById(id).value=''); document.getElementById('loc-modal').classList.add('open'); }
+function openEditLoc(id) {
+  const l=currentCert.location_details.find(x=>x.id===id); if (!l) return;
+  editLocId=id; document.getElementById('loc-modal-title').textContent='Edit Location';
+  document.getElementById('loc-name').value=l.location_name;
+  document.getElementById('loc-person').value=l.responsible_person||'';
+  document.getElementById('loc-contact').value=l.contact_info||'';
+  document.getElementById('loc-notes').value=l.replacement_notes||'';
+  document.getElementById('loc-modal').classList.add('open');
+}
+function closeLocModal() { document.getElementById('loc-modal').classList.remove('open'); }
+async function saveLoc() {
+  const data={location_name:document.getElementById('loc-name').value.trim(),responsible_person:document.getElementById('loc-person').value,contact_info:document.getElementById('loc-contact').value,replacement_notes:document.getElementById('loc-notes').value};
+  if (!data.location_name) return toast('Name required','error');
+  let r;
+  if (editLocId) r=await fetch('/api/locations/'+editLocId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  else r=await fetch(`/api/certs/${currentCertId}/locations`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  if (r.ok) { toast('Saved','success'); closeLocModal(); openCert(currentCertId); } else toast('Failed','error');
+}
+async function deleteLoc(id) {
+  if (!confirm('Delete location?')) return;
+  const r=await fetch('/api/locations/'+id,{method:'DELETE'});
+  if (r.ok) { toast('Deleted','success'); openCert(currentCertId); } else toast('Failed','error');
+}
+
+// ── Notifications View ─────────────────────────────────────────────────────
+async function renderNotifyView() {
+  const certs=await fetch('/api/certs?sort=expiry').then(r=>r.json());
+  const expiring=certs.filter(c=>c.expiry_status!=='ok'&&c.expiry_status!=='unknown');
+  const emojis={expired:'🔴',critical:'🟠',warning:'🟡'};
+  const colors={expired:'var(--red)',critical:'var(--orange)',warning:'var(--yellow)'};
+  const item=c=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;margin-bottom:7px;cursor:pointer" onclick="openCert(${c.id})">
+    <span style="font-size:18px">${emojis[c.expiry_status]||'⚪'}</span>
+    <div style="flex:1"><div style="font-weight:600;font-size:12px">${esc(c.name)}</div><div style="font-size:11px;color:var(--text3);font-family:var(--font-mono)">${esc(c.domain)}</div></div>
+    <div style="text-align:right"><div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:${colors[c.expiry_status]||'var(--text3)'}">${c.days_until_expiry!==null?(c.days_until_expiry<0?'EXPIRED':c.days_until_expiry+'d'):'–'}</div><div style="font-size:10px;color:var(--text3)">${c.not_after?fmtDate(c.not_after):''}</div></div>
+    ${c.notify_slack?'<span style="font-size:11px;color:var(--accent)">🔔</span>':''}
+  </div>`;
+  document.getElementById('notify-content').innerHTML=`
+    ${expiring.length?expiring.map(item).join(''):
+    '<div class="empty"><div class="empty-icon">✅</div><div class="empty-title">All certificates healthy</div></div>'}
+  `;
+}
+async function runNotify() {
+  const r=await fetch('/api/notify/run',{method:'POST'});
+  const d=await r.json(); toast(`Check done. Sent: ${d.sent.length}`,'success'); renderNotifyView();
+}
+
+// ── Certbot ────────────────────────────────────────────────────────────────
+async function populateCbCertSelect() {
+  const certs=await fetch('/api/certs?sort=name').then(r=>r.json());
+  const sel=document.getElementById('cb-cert-id');
+  sel.innerHTML='<option value="">— Create standalone, don\'t link —</option>';
+  certs.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=`${c.name} (${c.domain})`;sel.appendChild(o);});
+}
+
+async function issueCertbot() {
+  const domain=document.getElementById('cb-domain').value.trim();
+  const extra=document.getElementById('cb-extra').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const email=document.getElementById('cb-email').value.trim();
+  const token=document.getElementById('cb-cf-token').value.trim();
+  const certId=document.getElementById('cb-cert-id').value||null;
+  if (!domain||!email||!token) return toast('Domain, email and CF token required','error');
+  const r=await fetch('/api/certbot/issue',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({domain,extra_domains:extra,email,cf_api_token:token,cert_id:certId?parseInt(certId):null})});
+  if (r.ok) { const d=await r.json(); toast(`Job #${d.job_id} queued!`,'success'); loadCertbotJobs(); pollCertbotJob(d.job_id); }
+  else { const e=await r.json(); toast('Error: '+(e.error||'?'),'error'); }
+}
+
+async function loadCertbotJobs() {
+  const jobs=await fetch('/api/certbot/jobs').then(r=>r.json());
+  const dots={queued:'dot-queued',running:'dot-running',completed:'dot-completed',failed:'dot-failed',pending:'dot-pending'};
+  document.getElementById('certbot-jobs-list').innerHTML=jobs.length?jobs.map(j=>`
+    <div class="cb-job">
+      <div class="cb-job-header">
+        <div class="status-dot ${dots[j.status]||'dot-queued'}"></div>
+        <strong style="font-size:12px">${esc(j.domain)}</strong>
+        <span style="font-size:10px;color:var(--text3);margin-left:auto">${j.created_at}</span>
+        <span style="font-size:10px;font-family:var(--font-mono);color:${j.status==='completed'?'var(--green)':j.status==='failed'?'var(--red)':'var(--yellow)'}">${j.status}</span>
+      </div>
+      ${j.extra_domains.length?`<div style="font-size:10px;color:var(--text3);font-family:var(--font-mono)">+${j.extra_domains.join(', ')}</div>`:''}
+      <button class="btn btn-secondary" style="font-size:10px;margin-top:7px" onclick="viewJobLog(${j.id})">View Log</button>
+    </div>`).join(''):'<div style="color:var(--text3);font-size:12px">No jobs yet</div>';
+}
+
+async function viewJobLog(id) {
+  const j=await fetch('/api/certbot/jobs/'+id).then(r=>r.json());
+  alert(`Job #${id} — ${j.domain} — ${j.status}\n\n${j.log||'(no log)'}`);
+}
+
+function pollCertbotJob(id) {
+  const interval=setInterval(async()=>{
+    const j=await fetch('/api/certbot/jobs/'+id).then(r=>r.json());
+    if (j.status==='completed') { clearInterval(interval); toast('Certificate issued!','success'); loadCerts(); loadStats(); loadCertbotJobs(); }
+    else if (j.status==='failed') { clearInterval(interval); toast('Certbot job failed — check log','error'); loadCertbotJobs(); }
+    else loadCertbotJobs();
+  },4000);
+}
+
+// ── Account / TOTP ─────────────────────────────────────────────────────────
+async function renderAccountView() {
+  const user=await fetch('/api/auth/me').then(r=>r.json());
+  const area=document.getElementById('totp-status-area');
+  if (user.totp_enabled) {
+    area.innerHTML=`
+      <div style="display:flex;align-items:center;gap:10px;padding:12px;background:rgba(0,232,120,.08);border:1px solid rgba(0,232,120,.3);border-radius:6px;margin-bottom:14px">
+        <span style="font-size:20px">✅</span>
+        <div><div style="font-size:13px;font-weight:600;color:var(--green)">MFA is enabled</div><div style="font-size:11px;color:var(--text3)">Your account is protected with TOTP authentication</div></div>
+      </div>
+      <div class="form-row"><label class="form-label">Enter your authenticator code to confirm</label><input type="text" class="form-input" id="disable-mfa-token" placeholder="6-digit code" maxlength="6" inputmode="numeric" style="text-align:center;font-size:20px;font-family:var(--font-mono);letter-spacing:4px"/></div>
+      <button class="btn btn-danger" onclick="disableMfa()">Disable MFA</button>
+    `;
+  } else {
+    area.innerHTML=`
+      <div style="display:flex;align-items:center;gap:10px;padding:12px;background:rgba(255,140,48,.08);border:1px solid rgba(255,140,48,.3);border-radius:6px;margin-bottom:14px">
+        <span style="font-size:20px">⚠️</span>
+        <div><div style="font-size:13px;font-weight:600;color:var(--orange)">MFA is not enabled</div><div style="font-size:11px;color:var(--text3)">Enable TOTP for stronger account security</div></div>
+      </div>
+      <button class="btn btn-primary" onclick="startMfaSetup()">Enable MFA →</button>
+    `;
+  }
+}
+
+async function changePassword() {
+  const cur=document.getElementById('cur-pw').value;
+  const np=document.getElementById('new-pw').value;
+  const np2=document.getElementById('new-pw2').value;
+  if (np!==np2) return toast('Passwords do not match','error');
+  const r=await fetch('/api/auth/change-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({current_password:cur,new_password:np})});
+  const d=await r.json();
+  if (d.ok) { toast('Password changed!','success'); ['cur-pw','new-pw','new-pw2'].forEach(id=>document.getElementById(id).value=''); }
+  else toast(d.error||'Failed','error');
+}
+
+async function startMfaSetup() {
+  const r=await fetch('/api/auth/totp/setup',{method:'POST'});
+  const d=await r.json();
+  document.getElementById('totp-secret-display').textContent=d.secret;
+  document.getElementById('totp-confirm-code').value='';
+  document.getElementById('qrcode-wrap').innerHTML='';
+  window.totpUri=d.uri;
+  try {
+    new QRCode(document.getElementById('qrcode-wrap'),{text:d.uri,width:200,height:200,colorLight:'#ffffff',colorDark:'#000000'});
+  } catch(e) {
+    document.getElementById('qrcode-wrap').innerHTML=`<div style="font-size:11px;color:var(--text3);text-align:center;padding:20px">Install an authenticator app and use the secret key below</div>`;
+  }
+  document.getElementById('totp-modal').classList.add('open');
+}
+
+function closeTotpModal() { document.getElementById('totp-modal').classList.remove('open'); }
+
+async function confirmTotp() {
+  const code=document.getElementById('totp-confirm-code').value.trim();
+  if (code.length!==6) return toast('Enter 6-digit code','error');
+  const r=await fetch('/api/auth/totp/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:code})});
+  const d=await r.json();
+  if (d.ok) { toast('MFA enabled!','success'); closeTotpModal(); renderAccountView(); }
+  else toast(d.error||'Invalid code','error');
+}
+
+async function disableMfa() {
+  const pw=document.getElementById('disable-mfa-token').value.trim();
+  if(pw.length!==6){toast('Enter your 6-digit authenticator code','error');return;}
+  const r=await fetch('/api/auth/totp/disable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:pw})});
+  const d=await r.json();
+  if (d.ok) { toast('MFA disabled','success'); renderAccountView(); }
+  else toast(d.error||'Failed','error');
+}
+
+// ── Settings ───────────────────────────────────────────────────────────────
+async function loadSettings() {
+  const s=await fetch('/api/settings').then(r=>r.json());
+  if (s.slack) document.getElementById('s-slack').value=s.slack;
+  if (s.default_tags) document.getElementById('s-tags').value=s.default_tags;
+  if (s.default_notify_days) {
+    const days=JSON.parse(s.default_notify_days);
+    resetDayChips('s-notify-days',days);
+  }
+}
+async function saveSettings() {
+  const days=getSelectedDays('s-notify-days');
+  await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slack:document.getElementById('s-slack').value,default_notify_days:JSON.stringify(days),default_tags:document.getElementById('s-tags').value})});
+  toast('Saved','success');
+}
+async function testSlack() {
+  const url=document.getElementById('s-slack').value;
+  if (!url) return toast('Enter webhook URL','error');
+  const r=await fetch('/api/notify/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({webhook_url:url})});
+  const d=await r.json();
+  d.ok ? toast('Test sent!','success') : toast('Failed: '+d.error,'error');
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDate(d) { if (!d) return '–'; try { return new Date(d.replace(' ','T')+'Z').toLocaleDateString('en-CA',{year:'numeric',month:'short',day:'numeric'}); } catch(e){return d;} }
+function toast(msg,type='info') {
+  const c=document.getElementById('toasts');
+  const t=document.createElement('div'); t.className=`toast toast-${type}`;
+  const icons = {success:'✓',error:'✕',info:'ℹ'};
+  t.innerHTML=`<span>${icons[type]||'ℹ'}</span><span>${esc(msg)}</span>`;
+  c.appendChild(t); setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},3500);
+}
+function togglePass(id) { const i=document.getElementById(id); i.type=i.type==='password'?'text':'password'; }
+
+document.addEventListener('keydown',e=>{
+  if (e.key==='Escape') {
+    if (document.getElementById('totp-modal').classList.contains('open')) closeTotpModal();
+    else if (document.getElementById('cert-modal').classList.contains('open')) closeCertModal();
+    else if (document.getElementById('upload-modal').classList.contains('open')) closeUploadModal();
+    else if (document.getElementById('loc-modal').classList.contains('open')) closeLocModal();
+    else if (document.getElementById('cert-panel').classList.contains('open')) closePanel();
+  }
+});
+</script>
+</body>
+</html>

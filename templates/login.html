@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CertVault — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0a0d12;--bg2:#0f1318;--bg3:#141920;--border:#1e2a38;--text:#c8d8e8;--text2:#7a9ab8;--text3:#4a6880;--accent:#00c8ff;--red:#ff4060;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+.wrap{width:100%;max-width:400px;padding:20px;}
+.logo{text-align:center;margin-bottom:32px;}
+.logo-icon{width:52px;height:52px;background:var(--accent);border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:10px;}
+.logo-title{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;}
+.logo-sub{font-size:12px;color:var(--text3);margin-top:3px;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:28px;}
+.card-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:20px;}
+.setup-note{background:rgba(0,200,255,.08);border:1px solid rgba(0,200,255,.2);border-radius:6px;padding:12px;font-size:12px;color:var(--text2);margin-bottom:18px;line-height:1.6;}
+.err{background:rgba(255,64,96,.1);border:1px solid rgba(255,64,96,.3);color:var(--red);padding:10px 12px;border-radius:6px;font-size:13px;margin-bottom:14px;display:none;}
+.row{margin-bottom:14px;}
+.lbl{display:block;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}
+.inp{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:6px;font-size:14px;font-family:'IBM Plex Sans',sans-serif;outline:none;transition:border-color .15s;}
+.inp:focus{border-color:var(--accent);}
+.inp::placeholder{color:var(--text3);}
+.pw{position:relative;}
+.pw .inp{padding-right:36px;}
+.eye{position:absolute;right:9px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;}
+.btn{width:100%;padding:11px;border-radius:6px;border:none;cursor:pointer;font-size:14px;font-family:'IBM Plex Sans',sans-serif;font-weight:600;transition:all .15s;}
+.btn-primary{background:var(--accent);color:#000;margin-top:4px;}
+.btn-primary:hover{background:#33d4ff;}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+.btn-ghost{background:var(--bg3);color:var(--text2);margin-top:8px;}
+.totp-hint{font-size:12px;color:var(--text3);margin-top:8px;text-align:center;line-height:1.6;}
+#totp-form{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">
+    <div class="logo-icon">🔐</div>
+    <div class="logo-title">CertVault</div>
+    <div class="logo-sub">Certificate Management</div>
+  </div>
+  <div class="card">
+    {% if needs_setup %}
+    <div class="card-title">Create Admin Account</div>
+    <div class="setup-note">First run — create your admin account to get started.</div>
+    {% else %}
+    <div class="card-title">Sign In</div>
+    {% endif %}
+
+    <div class="err" id="err"></div>
+
+    <div id="login-form">
+      <div class="row"><label class="lbl">Username</label><input type="text" class="inp" id="u" autocomplete="username" autofocus/></div>
+      <div class="row"><label class="lbl">Password</label>
+        <div class="pw"><input type="password" class="inp" id="p" autocomplete="{% if needs_setup %}new-password{% else %}current-password{% endif %}"/>
+        <button class="eye" type="button" onclick="togglePw('p')">👁</button></div></div>
+      {% if needs_setup %}
+      <div class="row"><label class="lbl">Confirm Password</label>
+        <div class="pw"><input type="password" class="inp" id="c" autocomplete="new-password"/>
+        <button class="eye" type="button" onclick="togglePw('c')">👁</button></div></div>
+      {% endif %}
+      <button class="btn btn-primary" id="sbtn" onclick="submit()">{% if needs_setup %}Create Account{% else %}Sign In{% endif %}</button>
+    </div>
+
+    <div id="totp-form">
+      <div class="row"><label class="lbl">Authenticator Code</label>
+        <input type="text" class="inp" id="totp" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code"/></div>
+      <div class="totp-hint">Enter the 6-digit code from your authenticator app.</div>
+      <button class="btn btn-primary" onclick="submitTotp()" style="margin-top:14px">Verify</button>
+      <button class="btn btn-ghost" onclick="back()">← Back</button>
+    </div>
+  </div>
+</div>
+<script>
+const IS_SETUP = {{ 'true' if needs_setup else 'false' }};
+function togglePw(id){const e=document.getElementById(id);e.type=e.type==='password'?'text':'password';}
+function err(m){const e=document.getElementById('err');e.textContent=m;e.style.display='block';}
+function clerr(){document.getElementById('err').style.display='none';}
+function back(){document.getElementById('totp-form').style.display='none';document.getElementById('login-form').style.display='block';clerr();}
+
+async function submit(){
+  clerr();
+  const u=document.getElementById('u').value.trim();
+  const p=document.getElementById('p').value;
+  if(!u||!p){err('Fill in all fields.');return;}
+  if(IS_SETUP){
+    const c=document.getElementById('c').value;
+    if(p!==c){err('Passwords do not match.');return;}
+    if(p.length<8){err('Password must be 8+ characters.');return;}
+    const btn=document.getElementById('sbtn');btn.disabled=true;btn.textContent='Creating…';
+    const r=await fetch('/api/auth/setup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+    const d=await r.json();
+    if(d.ok){location.href='/';}else{err(d.error||'Setup failed');btn.disabled=false;btn.textContent='Create Account';}
+    return;
+  }
+  const btn=document.getElementById('sbtn');btn.disabled=true;btn.textContent='Signing in…';
+  const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+  const d=await r.json();
+  if(d.ok){location.href='/';}
+  else if(d.need_totp){document.getElementById('login-form').style.display='none';document.getElementById('totp-form').style.display='block';document.getElementById('totp').focus();}
+  else{err(d.error||'Login failed');}
+  btn.disabled=false;btn.textContent='Sign In';
+}
+
+async function submitTotp(){
+  clerr();
+  const tok=document.getElementById('totp').value.trim();
+  if(tok.length!==6){err('Enter 6-digit code.');return;}
+  const u=document.getElementById('u').value.trim();
+  const p=document.getElementById('p').value;
+  const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p,totp_token:tok})});
+  const d=await r.json();
+  if(d.ok){location.href='/';}else{err(d.error||'Invalid code');}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'){if(document.getElementById('totp-form').style.display==='block')submitTotp();else submit();}});
+</script>
+</body>
+</html>
